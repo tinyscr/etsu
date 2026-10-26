@@ -1,31 +1,32 @@
 ## etsu
 
-Read, clean, and set file dates through ExifTool. Windows-only, installed per-user under AppData. The binary is its own installer.
+Read, clean, and set file dates through ExifTool. Windows-only, per-user install with a standard setup wizard.
 
 ### Build
 
 ```bat
 build.bat
+build-installer.bat
 ```
 
-Creates `bin\etsu.exe`. Requires Go 1.27+ and `exiftool.exe` on PATH (or a full path in the config).
+`build.bat` creates `bin\etsu.exe` (Go 1.27+). `build-installer.bat` creates `dist\etsu-setup-0.1.0.exe` and requires Inno Setup 6:
+
+```bat
+winget install JRSoftware.InnoSetup --scope user
+```
 
 ### Install
 
-```bat
-bin\etsu.exe install
-```
+Run `dist\etsu-setup-0.1.0.exe`. The wizard:
 
-Copies `etsu.exe` to `%LOCALAPPDATA%\Programs\etsu\etsu.exe`, seeds `%APPDATA%\etsu\.etsu`, and registers an `etsu` submenu (Read metadata, Clean metadata, Set date) for one selected file. Writes only HKCU registry keys, so no admin rights are needed. On Windows 11 the menu appears under **Show more options**.
+- Installs to `%LOCALAPPDATA%\Programs\etsu`
+- Seeds `%APPDATA%\etsu\.etsu`
+- Registers the `etsu` submenu (Read metadata, Clean metadata, Set date) for one selected file
+- Adds an entry to **Settings > Apps** (and Revo Uninstaller)
 
-Uninstall from the installed copy:
+No admin rights are needed; everything is per-user. On Windows 11 the context menu appears under **Show more options**.
 
-```bat
-etsu uninstall
-etsu uninstall --purge
-```
-
-`--purge` also removes config, logs, and temp files. The install directory removes itself after exit.
+Uninstall from Settings > Apps, Revo, or `%LOCALAPPDATA%\Programs\etsu\unins000.exe`. It removes the menu, config, logs, and temp files.
 
 ### Usage
 
@@ -44,3 +45,5 @@ File paths are required; there are no GUI pickers. The Explorer menu passes the 
 - Temp workspace: `%LOCALAPPDATA%\etsu\tmp\`
 
 `exiftoolPATH=null` means "find exiftool on PATH". Logging is controlled per subtool (`log`, `logCount`).
+
+ExifTool is an external dependency. Install it and put `exiftool.exe` on PATH, or set a full path in the config.

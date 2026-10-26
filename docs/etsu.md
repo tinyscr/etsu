@@ -1,19 +1,20 @@
 ## Read, clean, and set file dates
 
-- **Source:** `cmd/etsu/main.go` (entry + dispatch), `internal/app` (paths, config, ExifTool lookup, output), `internal/ops` (read/clean/date), `internal/install` (self-installer + registry)
-- **Dependencies:** external `exiftool`; Go 1.27+ to build
+- **Source:** `cmd/etsu/main.go` (entry + dispatch), `internal/app` (paths, config, ExifTool lookup, output), `internal/ops` (read/clean/date), `installer/etsu.iss` (Inno Setup installer)
+- **Dependencies:** external `exiftool`; Go 1.27+ to build the app; Inno Setup 6 to build the installer
 - **Description:** CLI frontend for ExifTool. Reads all metadata from one file, strips EXIF/IPTC/XMP from several (rollback-safe), or sets EXIF dates and filesystem timestamps on several.
 
 ---
 
 ### Install
 
-`etsu install` is the installer:
+The release artifact is `etsu-setup-<version>.exe`, built with Inno Setup. It installs per-user and requires no admin rights:
 
-1. Copies the running `etsu.exe` to `%LOCALAPPDATA%\Programs\etsu\etsu.exe`.
+1. Copies `etsu.exe` to `%LOCALAPPDATA%\Programs\etsu`.
 2. Seeds `%APPDATA%\etsu\.etsu` if missing.
-3. Verifies ExifTool is available (config path, then PATH, then the exe directory).
+3. Warns if ExifTool cannot be found (PATH, configured path, or next to the exe).
 4. Registers the HKCU context menu pointing at the installed copy.
+5. Creates an uninstall entry in `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall`, so it appears in **Settings > Apps**, Revo Uninstaller, and similar tools.
 
 ```
 HKCU\Software\Classes\*\shell\etsu
@@ -23,9 +24,24 @@ HKCU\Software\Classes\*\shell\etsu
   shell\c_date  -> "…\etsu.exe" date "%L"
 ```
 
-`etsu uninstall` removes the registry tree and the install directory (self-delete is deferred until exit). `--purge` also removes `%APPDATA%\etsu` and `%LOCALAPPDATA%\etsu`.
+Uninstall from Settings > Apps, Revo, or the generated `unins000.exe`. The uninstaller removes the menu, install directory, config, logs, and temp files.
 
-No admin rights are used anywhere. On Windows 11 the menu appears under **Show more options**.
+On Windows 11 the menu appears under **Show more options**.
+
+### Build
+
+```bat
+build.bat
+build-installer.bat
+```
+
+`build.bat` runs `go build` into `bin\etsu.exe`. `build-installer.bat` runs the Inno Setup compiler and writes `dist\etsu-setup-<version>.exe`. Install Inno Setup 6 with:
+
+```bat
+winget install JRSoftware.InnoSetup --scope user
+```
+
+The installer version defaults to `0.1.0` in `installer/etsu.iss`; the release workflow overrides it with `/DAppVersion=<tag without v>`.
 
 ---
 
@@ -35,8 +51,6 @@ No admin rights are used anywhere. On Windows 11 the menu appears under **Show m
 etsu read FILE         Read metadata from one file
 etsu clean FILE...     Strip EXIF/IPTC/XMP from files (rollback-safe)
 etsu date FILE...      Set EXIF dates + filesystem timestamps on files
-etsu install           Install to AppData and register the context menu
-etsu uninstall [--purge]  Remove the menu and installed files
 ```
 
 No subcommand prints usage and exits. File paths are required; the WinForms pickers from the C# version were dropped because the Explorer menu always supplies `%L`.
@@ -80,7 +94,7 @@ After the swap, etsu sets the creation time once more via `SetFileTime`. Windows
 
 ### Configuration
 
-`%APPDATA%\etsu\.etsu`, seeded on install. One section per subtool, keys case-insensitive, `#` and `;` lines are comments:
+`%APPDATA%\etsu\.etsu`, seeded by the installer. One section per subtool, keys case-insensitive, `#` and `;` lines are comments:
 
 ```ini
 [General]
@@ -112,8 +126,8 @@ Missing file or section falls back to these defaults.
 ### Design decisions
 
 - **Copy-verify-swap pipeline:** the original is never touched until a verified cleaned copy exists. Any failure restores `.bak` files, so a bad wipe can't destroy metadata permanently.
-- **Self-installing binary:** no MSI/NSIS dependency. The same exe handles install, upgrade (rerun `install`), and uninstall.
-- **HKCU-only registration:** per-user install and menu, no elevation.
+- **Inno Setup installer:** a standard wizard plus an Apps & Features / Revo uninstall entry. The app itself is only the CLI.
+- **Per-user install:** everything lives in AppData and HKCU, so no elevation is needed.
 - **Raw ExifTool dump for read:** `read` delegates wholesale instead of re-deriving a categorized summary, so all tags (including unknown ones) are shown.
 - **Per-file `-v` parsing in clean:** the `Deleting ...` lines are captured into logs so you can see exactly which tags were stripped from each file.
 
@@ -122,6 +136,7 @@ Missing file or section falls back to these defaults.
 ### References
 
 - [ExifTool](https://exiftool.org/) - the metadata engine etsu wraps
+- [Inno Setup](https://jrsoftware.org/isinfo.php) - installer used for the setup exe
 
 ---
 
@@ -135,13 +150,18 @@ etsu/
 ├── internal/
 │   ├── app/                ← paths, config access, ExifTool lookup, console/log helpers
 │   ├── config/             ← INI parser
-│   ├── install/            ← self-installer, HKCU registry, default config
 │   └── ops/                ← read, clean, date, shared copy/verify/swap pipeline
+├── installer/
+│   ├── etsu.iss            ← Inno Setup script
+│   └── default.etsu        ← config seeded on install
 ├── bin/
 │   └── etsu.exe            ← compiled binary
+├── dist/
+│   └── etsu-setup-*.exe    ← compiled installer
 ├── docs/
 │   └── etsu.md
 ├── build.bat
+├── build-installer.bat
 └── go.mod
 ```
 
@@ -151,5 +171,6 @@ etsu/
 
 - `read` shows the raw ExifTool dump, not a categorized summary.
 - The Explorer context menu is single-file only; multi-select needs a COM shell extension.
-- ExifTool is not bundled. The installer fails with guidance if it cannot find `exiftool.exe`.
+- ExifTool is not bundled yet. The installer warns if it cannot find `exiftool.exe`.
 - Context-menu actions open a console window (unchanged from the C# version).
+- The setup and app use the default Inno/Go icon until an icon is added.

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/tinyscr/etsu/internal/app"
-	"github.com/tinyscr/etsu/internal/install"
 	"github.com/tinyscr/etsu/internal/ops"
 )
 
@@ -22,11 +21,6 @@ func run(args []string) int {
 	}
 
 	switch cmd {
-	case "install":
-		return install.Install()
-	case "uninstall":
-		purge := len(args) > 1 && strings.EqualFold(args[1], "--purge")
-		return install.Uninstall(purge)
 	case "read":
 		if !app.FindExifTool() {
 			return 1
@@ -43,7 +37,7 @@ func run(args []string) int {
 		}
 		return ops.Date(args[1:])
 	default:
-		fmt.Println("Usage: etsu read|clean|date|install|uninstall [FILE...]")
+		fmt.Println("Usage: etsu read|clean|date [FILE...]")
 		return 1
 	}
 }

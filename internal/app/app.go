@@ -50,8 +50,6 @@ func ConfigDir() string  { return filepath.Join(appData(), "etsu") }
 func ConfigPath() string { return filepath.Join(ConfigDir(), ".etsu") }
 func LogDir() string     { return filepath.Join(localAppData(), "etsu", "logs", "etsu") }
 func TempDir() string    { return filepath.Join(localAppData(), "etsu", "tmp") }
-func DataDir() string    { return filepath.Join(localAppData(), "etsu") }
-func InstallDir() string { return filepath.Join(localAppData(), "Programs", "etsu") }
 
 func GeneralString(key, def string) string { return cfg.String("General", key, def) }
 func LogEnabled(tool string) bool          { return cfg.Bool(tool, "log", tool != "read") }
