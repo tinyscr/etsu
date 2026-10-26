@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory dist -Force | Out-Null
+          go build -trimpath -ldflags "-s -w" -o dist/etsu.exe ./cmd/etsu
+          if ($LASTEXITCODE -ne 0) { throw "go build failed" }
+          if (-not (Test-Path "dist/etsu.exe")) { throw "etsu.exe was not built" }
+
+      - name: Package
+        shell: pwsh
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $stage = "dist/etsu"
+          New-Item -ItemType Directory $stage -Force | Out-Null
+          Copy-Item "dist/etsu.exe" $stage
+          Copy-Item "README.md", "LICENSE" $stage
+          Copy-Item "docs" $stage -Recurse
+          Compress-Archive -Path $stage -DestinationPath "dist/$env:TAG.zip" -CompressionLevel Optimal
+          $hash = (Get-FileHash "dist/$env:TAG.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $env:TAG.zip" | Set-Content "dist/SHA256SUMS.txt" -Encoding ascii
+
+      - name: Create draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          gh release create $env:TAG "dist/$env:TAG.zip" "dist/SHA256SUMS.txt" `
+            --draft --target $env:GITHUB_SHA --title $env:TAG --notes "etsu $env:TAG"
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }

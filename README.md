@@ -1,6 +1,6 @@
 ## etsu
 
-Read, clean, and set file dates through ExifTool. Portable, no install step. Builds with Windows' built-in C# compiler.
+Read, clean, and set file dates through ExifTool. Windows-only, installed per-user under AppData. The binary is its own installer.
 
 ### Build
 
@@ -8,22 +8,39 @@ Read, clean, and set file dates through ExifTool. Portable, no install step. Bui
 build.bat
 ```
 
-Creates `bin\etsu.exe`. Requires .NET Framework 4.0+ and `exiftool.exe` on PATH or next to the binary.
+Creates `bin\etsu.exe`. Requires Go 1.27+ and `exiftool.exe` on PATH (or a full path in the config).
 
-### Explorer context menu (single file)
+### Install
 
 ```bat
 bin\etsu.exe install
 ```
 
-Adds an `etsu` submenu with Read metadata, Clean metadata, and Set date for one selected file. Writes only HKCU registry keys. On Windows 11 the menu appears under **Show more options**.
+Copies `etsu.exe` to `%LOCALAPPDATA%\Programs\etsu\etsu.exe`, seeds `%APPDATA%\etsu\.etsu`, and registers an `etsu` submenu (Read metadata, Clean metadata, Set date) for one selected file. Writes only HKCU registry keys, so no admin rights are needed. On Windows 11 the menu appears under **Show more options**.
 
-Remove it with:
+Uninstall from the installed copy:
 
 ```bat
-bin\etsu.exe uninstall
+etsu uninstall
+etsu uninstall --purge
 ```
+
+`--purge` also removes config, logs, and temp files. The install directory removes itself after exit.
+
+### Usage
+
+```bat
+etsu read FILE
+etsu clean FILE...
+etsu date FILE...
+```
+
+File paths are required; there are no GUI pickers. The Explorer menu passes the selected file automatically.
 
 ### Config and logs
 
-`conf\.etsu` controls per-subtool logging. Logs go to `logs\etsu\`.
+- Config: `%APPDATA%\etsu\.etsu`
+- Logs: `%LOCALAPPDATA%\etsu\logs\etsu\`
+- Temp workspace: `%LOCALAPPDATA%\etsu\tmp\`
+
+`exiftoolPATH=null` means "find exiftool on PATH". Logging is controlled per subtool (`log`, `logCount`).
