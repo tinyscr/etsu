@@ -34,7 +34,7 @@ UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
-; SetupIconFile=..\..\assets\etsu.ico
+SetupIconFile=..\icon.ico
 ; Future: add an install-mode page (menu-only vs CLI-only).
 
 [Files]
