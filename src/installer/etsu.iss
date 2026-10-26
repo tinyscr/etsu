@@ -20,8 +20,8 @@ DefaultDirName={localappdata}\Programs\etsu
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-OutputDir=..\dist
-OutputBaseFilename=etsu-setup-{#AppVersion}
+OutputDir=..\..\dist
+OutputBaseFilename=etsu_v{#AppVersion}_installer
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -31,10 +31,10 @@ UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
-; SetupIconFile=assets\etsu.ico
+; SetupIconFile=..\..\assets\etsu.ico
 
 [Files]
-Source: "..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "default.etsu"; DestDir: "{userappdata}\etsu"; DestName: ".etsu"; Flags: onlyifdoesntexist
 
 [Registry]

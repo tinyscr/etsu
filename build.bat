@@ -1,8 +1,30 @@
 @echo off
+setlocal
+
+set "VERSION=%~1"
+if "%VERSION%"=="" set "VERSION=0.1.0"
+if /i "%VERSION:~0,1%"=="v" set "VERSION=%VERSION:~1%"
+
+set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
+if not exist "%ISCC%" set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
+
+if not exist "%ISCC%" (
+    echo Inno Setup 6 not found. Install it with:
+    echo   winget install JRSoftware.InnoSetup --scope user
+    exit /b 1
+)
+
 if not exist bin\ md bin
+if not exist dist\ md dist
 
 echo Building etsu...
-go build -trimpath -ldflags "-s -w" -o bin\etsu.exe .\cmd\etsu
-if %ERRORLEVEL% NEQ 0 exit /b 1
+go build -C src -trimpath -ldflags "-s -w" -o ..\bin\etsu.exe .\cmd\etsu
+if errorlevel 1 exit /b 1
 
-echo Build succeeded.
+echo Building installer...
+"%ISCC%" /DAppVersion=%VERSION% src\installer\etsu.iss
+if errorlevel 1 exit /b 1
+
+echo.
+echo Installer: dist\etsu_v%VERSION%_installer.exe

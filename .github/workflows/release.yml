@@ -21,13 +21,14 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: src/go.mod
 
       - name: Build app
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          go build -trimpath -ldflags "-s -w" -o bin/etsu.exe ./cmd/etsu
+          New-Item -ItemType Directory bin -Force | Out-Null
+          go build -C src -trimpath -ldflags "-s -w" -o ../bin/etsu.exe ./cmd/etsu
           if ($LASTEXITCODE -ne 0) { throw "go build failed" }
           if (-not (Test-Path "bin/etsu.exe")) { throw "etsu.exe was not built" }
 
@@ -55,13 +56,13 @@ jobs:
           if (-not $iscc) { throw "Inno Setup compiler not found" }
 
           New-Item -ItemType Directory dist -Force | Out-Null
-          & $iscc "/DAppVersion=$version" "installer\etsu.iss"
+          & $iscc "/DAppVersion=$version" "src\installer\etsu.iss"
           if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
 
-          $setup = "dist/etsu-setup-$version.exe"
+          $setup = "dist/etsu_v${version}_installer.exe"
           if (-not (Test-Path $setup)) { throw "Setup exe was not built" }
           $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  etsu-setup-$version.exe" | Set-Content "dist/SHA256SUMS.txt" -Encoding ascii
+          "$hash  etsu_v${version}_installer.exe" | Set-Content "dist/SHA256SUMS.txt" -Encoding ascii
           "SETUP=$setup" >> $env:GITHUB_ENV
 
       - name: Create draft release

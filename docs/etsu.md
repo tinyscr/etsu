@@ -1,6 +1,6 @@
 ## Read, clean, and set file dates
 
-- **Source:** `cmd/etsu/main.go` (entry + dispatch), `internal/app` (paths, config, ExifTool lookup, output), `internal/ops` (read/clean/date), `installer/etsu.iss` (Inno Setup installer)
+- **Source:** `src/cmd/etsu/main.go` (entry + dispatch), `src/internal/app` (paths, config, ExifTool lookup, output), `src/internal/ops` (read/clean/date), `src/installer/etsu.iss` (Inno Setup installer)
 - **Dependencies:** external `exiftool`; Go 1.27+ to build the app; Inno Setup 6 to build the installer
 - **Description:** CLI frontend for ExifTool. Reads all metadata from one file, strips EXIF/IPTC/XMP from several (rollback-safe), or sets EXIF dates and filesystem timestamps on several.
 
@@ -8,7 +8,7 @@
 
 ### Install
 
-The release artifact is `etsu-setup-<version>.exe`, built with Inno Setup. It installs per-user and requires no admin rights:
+The release artifact is `etsu_v<version>_installer.exe`, built with Inno Setup. It installs per-user and requires no admin rights:
 
 1. Copies `etsu.exe` to `%LOCALAPPDATA%\Programs\etsu`.
 2. Seeds `%APPDATA%\etsu\.etsu` if missing.
@@ -32,16 +32,16 @@ On Windows 11 the menu appears under **Show more options**.
 
 ```bat
 build.bat
-build-installer.bat
+build.bat 0.2.0
 ```
 
-`build.bat` runs `go build` into `bin\etsu.exe`. `build-installer.bat` runs the Inno Setup compiler and writes `dist\etsu-setup-<version>.exe`. Install Inno Setup 6 with:
+`build.bat` runs `go build` for `src/`, then the Inno Setup compiler, and writes `dist\etsu_v<version>_installer.exe`. Version defaults to `0.1.0`. Install Inno Setup 6 with:
 
 ```bat
 winget install JRSoftware.InnoSetup --scope user
 ```
 
-The installer version defaults to `0.1.0` in `installer/etsu.iss`; the release workflow overrides it with `/DAppVersion=<tag without v>`.
+The release workflow overrides the version with `/DAppVersion=<tag without v>`.
 
 ---
 
@@ -144,25 +144,28 @@ Missing file or section falls back to these defaults.
 
 ```
 etsu/
-├── cmd/
-│   └── etsu/
-│       └── main.go         ← entry + dispatch
-├── internal/
-│   ├── app/                ← paths, config access, ExifTool lookup, console/log helpers
-│   ├── config/             ← INI parser
-│   └── ops/                ← read, clean, date, shared copy/verify/swap pipeline
-├── installer/
-│   ├── etsu.iss            ← Inno Setup script
-│   └── default.etsu        ← config seeded on install
+├── build.bat
+├── src/
+│   ├── go.mod
+│   ├── go.sum
+│   ├── cmd/
+│   │   └── etsu/
+│   │       └── main.go         ← entry + dispatch
+│   ├── internal/
+│   │   ├── app/                ← paths, config access, ExifTool lookup, console/log helpers
+│   │   ├── config/             ← INI parser
+│   │   └── ops/                ← read, clean, date, shared copy/verify/swap pipeline
+│   └── installer/
+│       ├── etsu.iss            ← Inno Setup script
+│       └── default.etsu        ← config seeded on install
 ├── bin/
-│   └── etsu.exe            ← compiled binary
+│   └── etsu.exe                ← intermediate app build
 ├── dist/
-│   └── etsu-setup-*.exe    ← compiled installer
+│   └── etsu_v*_installer.exe   ← final installer
 ├── docs/
 │   └── etsu.md
-├── build.bat
-├── build-installer.bat
-└── go.mod
+├── LICENSE
+└── README.md
 ```
 
 ---

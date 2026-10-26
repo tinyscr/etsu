@@ -6,10 +6,15 @@ Read, clean, and set file dates through ExifTool. Windows-only, per-user install
 
 ```bat
 build.bat
-build-installer.bat
 ```
 
-`build.bat` creates `bin\etsu.exe` (Go 1.27+). `build-installer.bat` creates `dist\etsu-setup-0.1.0.exe` and requires Inno Setup 6:
+Builds the app and the installer, producing `dist\etsu_v0.1.0_installer.exe`. Pass a version to override:
+
+```bat
+build.bat 0.2.0
+```
+
+Requires Go 1.27+ and Inno Setup 6:
 
 ```bat
 winget install JRSoftware.InnoSetup --scope user
@@ -17,7 +22,7 @@ winget install JRSoftware.InnoSetup --scope user
 
 ### Install
 
-Run `dist\etsu-setup-0.1.0.exe`. The wizard:
+Run `dist\etsu_v0.1.0_installer.exe`. The wizard:
 
 - Installs to `%LOCALAPPDATA%\Programs\etsu`
 - Seeds `%APPDATA%\etsu\.etsu`
