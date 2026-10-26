@@ -1,0 +1,5 @@
+bin/
+logs/
+*.user
+.vs/
+_exiftool_tmp_*/
