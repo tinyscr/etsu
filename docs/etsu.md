@@ -1,4 +1,4 @@
-## Read, clean, and set file dates
+## ETSU — Read, clean, and set file dates
 
 - **Source:** `src/cmd/etsu/main.go` (entry + dispatch), `src/internal/app` (paths, config, ExifTool lookup, output), `src/internal/ops` (read/clean/date), `src/installer/etsu.iss` (Inno Setup installer)
 - **Dependencies:** external `exiftool`; Go 1.27+ to build the app; Inno Setup 6 to build the installer
@@ -8,17 +8,17 @@
 
 ### Install
 
-The release artifact is `etsu_v<version>_installer.exe`, built with Inno Setup. It installs per-user and requires no admin rights:
+The release artifact is `etsu_v<version>_installer.exe`, built with Inno Setup. The wizard asks for the install location and requires accepting the MIT license. It installs per-user and requires no admin rights:
 
-1. Copies `etsu.exe` to `%LOCALAPPDATA%\Programs\etsu`.
+1. Copies `etsu.exe` to `%LOCALAPPDATA%\Programs\ETSU` by default.
 2. Seeds `%APPDATA%\etsu\.etsu` if missing.
 3. Warns if ExifTool cannot be found (PATH, configured path, or next to the exe).
 4. Registers the HKCU context menu pointing at the installed copy.
-5. Creates an uninstall entry in `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall`, so it appears in **Settings > Apps**, Revo Uninstaller, and similar tools.
+5. Creates an uninstall entry in `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall`, so it appears in **Settings > Apps**, Revo Uninstaller, and similar tools as `ETSU` by `TinyScripts`.
 
 ```
 HKCU\Software\Classes\*\shell\etsu
-  MUIVerb=etsu, subcommands="", MultiSelectModel=Single
+  MUIVerb=ETSU, subcommands="", MultiSelectModel=Single
   shell\a_read  -> "…\etsu.exe" read "%L"
   shell\b_clean -> "…\etsu.exe" clean "%L"
   shell\c_date  -> "…\etsu.exe" date "%L"
@@ -174,6 +174,7 @@ etsu/
 
 - `read` shows the raw ExifTool dump, not a categorized summary.
 - The Explorer context menu is single-file only; multi-select needs a COM shell extension.
+- The installer is menu-only for now; a menu-only vs CLI-only choice is planned.
 - ExifTool is not bundled yet. The installer warns if it cannot find `exiftool.exe`.
 - Context-menu actions open a console window (unchanged from the C# version).
 - The setup and app use the default Inno/Go icon until an icon is added.

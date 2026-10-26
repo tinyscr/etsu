@@ -1,6 +1,6 @@
-## etsu
+## ETSU
 
-Read, clean, and set file dates through ExifTool. Windows-only, per-user install with a standard setup wizard.
+Read, clean, and set file dates through ExifTool. Windows-only, per-user install with a standard setup wizard. Published by TinyScripts.
 
 ### Build
 
@@ -22,16 +22,16 @@ winget install JRSoftware.InnoSetup --scope user
 
 ### Install
 
-Run `dist\etsu_v0.1.0_installer.exe`. The wizard:
+Run `dist\etsu_v0.1.0_installer.exe`. The wizard asks where to install, shows the MIT license, then:
 
-- Installs to `%LOCALAPPDATA%\Programs\etsu`
+- Installs to `%LOCALAPPDATA%\Programs\ETSU` by default
 - Seeds `%APPDATA%\etsu\.etsu`
-- Registers the `etsu` submenu (Read metadata, Clean metadata, Set date) for one selected file
-- Adds an entry to **Settings > Apps** (and Revo Uninstaller)
+- Registers the **ETSU** submenu (Read metadata, Clean metadata, Set date) for one selected file
+- Adds an entry to **Settings > Apps** (and Revo Uninstaller) as `ETSU`, publisher `TinyScripts`
 
 No admin rights are needed; everything is per-user. On Windows 11 the context menu appears under **Show more options**.
 
-Uninstall from Settings > Apps, Revo, or `%LOCALAPPDATA%\Programs\etsu\unins000.exe`. It removes the menu, config, logs, and temp files.
+Uninstall from Settings > Apps, Revo, or `%LOCALAPPDATA%\Programs\ETSU\unins000.exe`. It removes the menu, config, logs, and temp files.
 
 ### Usage
 

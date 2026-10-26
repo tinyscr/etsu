@@ -1,8 +1,8 @@
-#define AppName "etsu"
+#define AppName "ETSU"
 #ifndef AppVersion
 #define AppVersion "0.1.0"
 #endif
-#define AppPublisher "tinyscr"
+#define AppPublisher "TinyScripts"
 #define AppURL "https://github.com/tinyscr/etsu"
 #define AppExeName "etsu.exe"
 #define AppId "{{81ADEFE9-F5E3-4A42-8DF5-5D7E9AE39925}"
@@ -16,9 +16,12 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
-DefaultDirName={localappdata}\Programs\etsu
+AppCopyright=Copyright (C) 2026 TinyScripts
+DefaultDirName={localappdata}\Programs\ETSU
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
+DisableDirPage=no
+LicenseFile=..\..\LICENSE
 PrivilegesRequired=lowest
 OutputDir=..\..\dist
 OutputBaseFilename=etsu_v{#AppVersion}_installer
@@ -32,13 +35,14 @@ VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
 ; SetupIconFile=..\..\assets\etsu.ico
+; Future: add an install-mode page (menu-only vs CLI-only).
 
 [Files]
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "default.etsu"; DestDir: "{userappdata}\etsu"; DestName: ".etsu"; Flags: onlyifdoesntexist
 
 [Registry]
-Root: HKCU; Subkey: "Software\Classes\*\shell\etsu"; ValueType: string; ValueName: "MUIVerb"; ValueData: "etsu"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\*\shell\etsu"; ValueType: string; ValueName: "MUIVerb"; ValueData: "ETSU"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu"; ValueType: string; ValueName: "subcommands"; ValueData: ""
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Single"
 
