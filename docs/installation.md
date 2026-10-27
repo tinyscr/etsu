@@ -25,7 +25,7 @@ The installer:
 4. Adds an uninstall entry under `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall`.
 5. Checks the configured ExifTool path when one is set; otherwise it looks on PATH and next to the installed `etsu.exe`. It warns when it finds no ExifTool.
 
-The installer does not add the install directory to PATH. Add `%LOCALAPPDATA%\Programs\ETSU` to PATH, or run `etsu.exe` by full path.
+The installer does not create a Start menu entry or a desktop shortcut. Start ETSU from the Explorer menu.
 
 ## Explorer menu
 
@@ -44,7 +44,7 @@ HKCU\Software\Classes\*\shell\etsu
   shell\c_date  -> etsu.exe date "%L"
 ```
 
-Clean metadata starts without a confirmation prompt. Set date asks for a date. Read metadata only prints the ExifTool output.
+Read metadata opens a window with the log expanded and stays open. Clean metadata starts without a confirmation prompt. Set date asks for a date and time.
 
 ## Upgrade
 

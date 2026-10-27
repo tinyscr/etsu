@@ -1,70 +1,29 @@
 package ops
 
 import (
-	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/tinyscr/etsu/internal/app"
 )
 
-func Date(paths []string) int {
-	app.WriteHeader("Date")
-	logLines := []string{
-		"ExifTool path: " + app.ExifPath,
-		"ExifTool version: " + app.ExifVersion,
+func Date(ctx context.Context, file string, dt time.Time, rep Reporter) error {
+	if _, err := os.Stat(file); err != nil {
+		rep.Log("[ABORT] File not found: " + file)
+		return fmt.Errorf("File not found: %s", file)
 	}
 
-	if len(paths) == 0 {
-		app.WriteLine("date takes at least one file path.", app.Red)
-		return 2
-	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err != nil {
-			app.WriteLine("File not found: "+p, app.Red)
-			return 2
-		}
-	}
+	rep.Log("ExifTool: " + app.ExifVersion + " (" + app.ExifPath + ")")
+	rep.Log("File: " + file)
+	rep.Log("Target date: " + dt.Format("02-01-2006 15:04:05"))
 
-	fmt.Println()
-	app.WriteLine("Selected files:", app.DarkGray)
-	fmt.Println()
-	for _, f := range paths {
-		fmt.Println("      " + filepath.Base(f))
-	}
-	logLines = append(logLines, "Files selected ("+strconv.Itoa(len(paths))+"):")
-	for _, f := range paths {
-		logLines = append(logLines, "  "+f)
-	}
-
-	app.WriteSep()
-
-	fmt.Print("  Enter date (DD-MM-YYYY HH:MM:SS): ")
-	input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-	input = strings.TrimSpace(input)
-	if input == "" {
-		app.WriteLine("No date entered.", app.DarkGray)
-		return 0
-	}
-
-	dt, err := time.ParseInLocation("02-01-2006 15:04:05", input, time.Local)
-	if err != nil {
-		app.WriteLine("[ABORT] Invalid date. Expected format: DD-MM-YYYY HH:MM:SS", app.Red)
-		logLines = append(logLines, "[ABORT] Invalid date input: "+input)
-		return 1
-	}
 	exifDate := dt.Format("2006:01:02 15:04:05")
-
-	logLines = append(logLines, "Target date: "+input)
-	fmt.Println()
-	app.WriteStep(0, 5, "Target date: "+input, "")
-
-	err = Process(paths, &logLines, "Setting date on files...", func(temp, orig string) error {
+	err := Process(ctx, file, rep, "Setting date", func(temp, orig string) error {
 		out, runErr := runExif(
+			ctx,
 			"-AllDates="+exifDate,
 			"-FileModifyDate="+exifDate,
 			"-FileCreateDate="+exifDate,
@@ -73,34 +32,28 @@ func Date(paths []string) int {
 			temp,
 		)
 		if runErr != nil {
-			msg := "[ABORT] ExifTool failed on " + filepath.Base(orig)
-			app.WriteLine(msg, app.Red)
-			logLines = append(logLines, msg)
-			for _, line := range app.SplitLines(out) {
-				app.WriteLine("  "+line, app.DarkGray)
-				logLines = append(logLines, "  "+line)
+			if ctx.Err() != nil {
+				return ctx.Err()
 			}
+			rep.Log("[ABORT] ExifTool failed on " + filepath.Base(orig))
+			logExifOutput(rep, out)
 			return runErr
 		}
 
-		logLines = append(logLines, "  Set OK: "+filepath.Base(orig))
+		rep.Log("  Set OK: " + filepath.Base(orig))
 		return nil
 	})
 	if err != nil {
-		return 1
+		return err
 	}
 
 	// Windows file-system tunneling can restore the previous creation time when
 	// the swapped file reuses the original name, so set it once more explicitly.
-	for _, file := range paths {
-		if err := app.SetCreationTime(file, dt); err != nil {
-			app.WriteLine("Warning: could not set creation time on "+filepath.Base(file)+": "+err.Error(), app.DarkGray)
-		}
+	if err := app.SetCreationTime(file, dt); err != nil {
+		rep.Log("Warning: could not set creation time on " + filepath.Base(file) + ": " + err.Error())
 	}
 
-	logLines = append(logLines, "", fmt.Sprintf("All done. %d file(s) date set in place.", len(paths)))
-	app.WriteSep()
-	app.WriteStep(5, 5, "Done!", " - "+strconv.Itoa(len(paths))+" file(s) date set in place.")
-	app.WriteLog("date", "SUCCESS", logLines)
-	return app.WaitExit()
+	rep.Log("")
+	rep.Log("All done. " + filepath.Base(file) + " date set in place.")
+	return nil
 }

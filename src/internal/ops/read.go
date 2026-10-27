@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,32 +9,27 @@ import (
 	"github.com/tinyscr/etsu/internal/app"
 )
 
-func Read(paths []string) int {
-	app.WriteHeader("Read")
-
-	if len(paths) != 1 {
-		app.WriteLine("read takes exactly one file path.", app.Red)
-		return 2
-	}
-
-	file := paths[0]
+func Read(ctx context.Context, file string, rep Reporter) error {
 	if _, err := os.Stat(file); err != nil {
-		app.WriteLine("File not found: "+file, app.Red)
-		return 2
+		rep.Log("[ABORT] File not found: " + file)
+		return fmt.Errorf("File not found: %s", file)
 	}
 
-	fmt.Println("  Selected: " + filepath.Base(file))
-	app.WriteSep()
+	rep.Log("File: " + file)
+	rep.Progress(20, "Reading metadata")
 
-	output := app.RunTool(app.ExifPath, file)
-	var logLines []string
-	for _, line := range app.SplitLines(output) {
-		fmt.Println("  " + line)
-		logLines = append(logLines, line)
+	out, err := runExif(ctx, file)
+	for _, line := range app.SplitLines(out) {
+		rep.Log(line)
+	}
+	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		rep.Log("[ABORT] ExifTool failed on " + filepath.Base(file))
+		return err
 	}
 
-	fmt.Println()
-	app.WriteSep()
-	app.WriteLog("read", "SUCCESS", logLines)
-	return app.WaitExit()
+	rep.Progress(100, "Done")
+	return nil
 }

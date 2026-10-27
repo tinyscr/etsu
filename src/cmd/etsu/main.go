@@ -1,43 +1,64 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/lxn/walk"
 	"github.com/tinyscr/etsu/internal/app"
-	"github.com/tinyscr/etsu/internal/ops"
+	"github.com/tinyscr/etsu/internal/ui"
 )
+
+const usage = "ETSU runs from the Explorer context menu.\n\n" +
+	"Right-click a file and choose ETSU, then Read metadata, Clean metadata, or Set date."
 
 func main() {
 	app.Init()
-	os.Exit(run(os.Args[1:]))
+
+	action, file, ok := parseArgs(os.Args[1:])
+	if !ok {
+		walk.MsgBox(nil, "ETSU", usage, walk.MsgBoxIconInformation)
+		return
+	}
+
+	if err := app.FindExifTool(); err != nil {
+		walk.MsgBox(nil, "ETSU", err.Error(), walk.MsgBoxIconError)
+		return
+	}
+
+	var when time.Time
+	if action == "date" {
+		var accepted bool
+		when, accepted = ui.AskDate()
+		if !accepted {
+			return
+		}
+	}
+
+	task, err := ui.NewTask(action, file, when)
+	if err != nil {
+		walk.MsgBox(nil, "ETSU", err.Error(), walk.MsgBoxIconError)
+		return
+	}
+	task.Run()
 }
 
-func run(args []string) int {
-	cmd := ""
-	if len(args) > 0 {
-		cmd = strings.ToLower(args[0])
+func parseArgs(args []string) (action, file string, ok bool) {
+	if len(args) != 2 {
+		return "", "", false
 	}
 
-	switch cmd {
-	case "read":
-		if !app.FindExifTool() {
-			return 1
-		}
-		return ops.Read(args[1:])
-	case "clean":
-		if !app.FindExifTool() {
-			return 1
-		}
-		return ops.Clean(args[1:])
-	case "date":
-		if !app.FindExifTool() {
-			return 1
-		}
-		return ops.Date(args[1:])
+	action = strings.ToLower(args[0])
+	switch action {
+	case "read", "clean", "date":
 	default:
-		fmt.Println("Usage: etsu read|clean|date [FILE...]")
-		return 1
+		return "", "", false
 	}
+
+	file = args[1]
+	if file == "" {
+		return "", "", false
+	}
+	return action, file, true
 }

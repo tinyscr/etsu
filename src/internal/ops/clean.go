@@ -1,11 +1,11 @@
 package ops
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/tinyscr/etsu/internal/app"
@@ -13,46 +13,23 @@ import (
 
 var deletingTag = regexp.MustCompile(`Deleting\s+(.+)$`)
 
-func Clean(paths []string) int {
-	app.WriteHeader("Clean")
-	logLines := []string{
-		"ExifTool path: " + app.ExifPath,
-		"ExifTool version: " + app.ExifVersion,
+func Clean(ctx context.Context, file string, rep Reporter) error {
+	if _, err := os.Stat(file); err != nil {
+		rep.Log("[ABORT] File not found: " + file)
+		return fmt.Errorf("File not found: %s", file)
 	}
 
-	if len(paths) == 0 {
-		app.WriteLine("clean takes at least one file path.", app.Red)
-		return 2
-	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err != nil {
-			app.WriteLine("File not found: "+p, app.Red)
-			return 2
-		}
-	}
+	rep.Log("ExifTool: " + app.ExifVersion + " (" + app.ExifPath + ")")
+	rep.Log("File: " + file)
 
-	fmt.Println()
-	app.WriteLine("Selected files:", app.DarkGray)
-	fmt.Println()
-	for _, f := range paths {
-		fmt.Println("      " + filepath.Base(f))
-	}
-	logLines = append(logLines, "Files selected ("+strconv.Itoa(len(paths))+"):")
-	for _, f := range paths {
-		logLines = append(logLines, "  "+f)
-	}
-
-	app.WriteSep()
-	err := Process(paths, &logLines, "Cleaning metadata...", func(temp, orig string) error {
-		out, runErr := runExif("-all=", "-overwrite_original", "-P", "-v", temp)
+	err := Process(ctx, file, rep, "Cleaning metadata", func(temp, orig string) error {
+		out, runErr := runExif(ctx, "-all=", "-overwrite_original", "-P", "-v", temp)
 		if runErr != nil {
-			msg := "[ABORT] ExifTool failed on " + filepath.Base(orig)
-			app.WriteLine(msg, app.Red)
-			logLines = append(logLines, msg)
-			for _, line := range app.SplitLines(out) {
-				app.WriteLine("  "+line, app.DarkGray)
-				logLines = append(logLines, "  "+line)
+			if ctx.Err() != nil {
+				return ctx.Err()
 			}
+			rep.Log("[ABORT] ExifTool failed on " + filepath.Base(orig))
+			logExifOutput(rep, out)
 			return runErr
 		}
 
@@ -63,23 +40,21 @@ func Clean(paths []string) int {
 			}
 		}
 
-		logLines = append(logLines, "  "+orig)
+		rep.Log("  " + orig)
 		if len(deleted) == 0 {
-			logLines = append(logLines, "    (no metadata found)")
+			rep.Log("    (no metadata found)")
 		} else {
 			for _, tag := range deleted {
-				logLines = append(logLines, "    - "+tag)
+				rep.Log("    - " + tag)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return 1
+		return err
 	}
 
-	logLines = append(logLines, "", fmt.Sprintf("All done. %d file(s) cleaned in place.", len(paths)))
-	app.WriteSep()
-	app.WriteStep(5, 5, "Done!", " - "+strconv.Itoa(len(paths))+" file(s) cleaned in place.")
-	app.WriteLog("clean", "SUCCESS", logLines)
-	return app.WaitExit()
+	rep.Log("")
+	rep.Log("All done. " + filepath.Base(file) + " cleaned in place.")
+	return nil
 }

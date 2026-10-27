@@ -18,11 +18,11 @@ if not exist "%ISCC%" (
 if not exist bin\ md bin
 if not exist dist\ md dist
 
-rem App icon is embedded from src\cmd\etsu\rsrc_windows_amd64.syso.
-rem Regenerate after changing src\icon.ico:
-rem   rsrc -arch amd64 -ico src\icon.ico -o src\cmd\etsu\rsrc_windows_amd64.syso
+rem App icon and manifest are embedded from src\cmd\etsu\rsrc_windows_amd64.syso.
+rem Regenerate after changing src\icon.ico or src\etsu.manifest:
+rem   rsrc -arch amd64 -ico src\icon.ico -manifest src\etsu.manifest -o src\cmd\etsu\rsrc_windows_amd64.syso
 echo Building etsu...
-go build -C src -trimpath -ldflags "-s -w" -o ..\bin\etsu.exe .\cmd\etsu
+go build -C src -trimpath -ldflags "-s -w -H windowsgui" -o ..\bin\etsu.exe .\cmd\etsu
 if errorlevel 1 exit /b 1
 
 echo Building installer...

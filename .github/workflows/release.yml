@@ -28,7 +28,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory bin -Force | Out-Null
-          go build -C src -trimpath -ldflags "-s -w" -o ../bin/etsu.exe ./cmd/etsu
+          go build -C src -trimpath -ldflags "-s -w -H windowsgui" -o ../bin/etsu.exe ./cmd/etsu
           if ($LASTEXITCODE -ne 0) { throw "go build failed" }
           if (-not (Test-Path "bin/etsu.exe")) { throw "etsu.exe was not built" }
 

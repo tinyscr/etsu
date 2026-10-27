@@ -2,9 +2,11 @@
 
 ## ExifTool is not found
 
-Run `exiftool -ver` in the same terminal. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` next to `etsu.exe`.
+Open a terminal and run `exiftool -ver`. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` next to `etsu.exe`.
 
 If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `%APPDATA%\etsu\.etsu`.
+
+If you just changed PATH, restart Explorer or sign out and back in so new actions see the new value.
 
 The installer warns at the end when it cannot find ExifTool.
 
@@ -18,7 +20,7 @@ The menu is registered for files, not folders, and for one selected file at a ti
 HKCU\Software\Classes\*\shell\etsu
 ```
 
-## Clean or date stops with a different disk drive error
+## Clean or Set date stops with a different disk drive error
 
 The error ends with:
 
@@ -28,16 +30,9 @@ The system cannot move the file to a different disk drive.
 
 ETSU copies the file to `%LOCALAPPDATA%\etsu\tmp` and then renames the copy into place. Windows cannot rename across drives. The original is restored.
 
-Process a copy on the system drive, or set `LOCALAPPDATA` to a folder on the target drive for that terminal session:
+Move the file to the same drive as `%LOCALAPPDATA%`, run the action, then move it back. The log shows the failing step and a `[ROLLBACK]` line.
 
-```bat
-set LOCALAPPDATA=D:\LocalAppData
-etsu clean "D:\Photos\image.jpg"
-```
-
-ETSU creates `etsu\tmp` and `etsu\logs` under that directory. The config path stays under `%APPDATA%`.
-
-## Clean or date stops with a backup already exists error
+## Clean or Set date stops with a backup already exists error
 
 ETSU refuses to overwrite an existing `<file>.bak`. Inspect both files before you remove anything. If the original is intact, rename or delete the `.bak`. If the `.bak` is the only good copy, restore it by renaming it back to the original name.
 
@@ -47,17 +42,27 @@ A crash during a swap can leave a `.bak` file. Do not delete it until you know w
 
 ETSU cleans a temp copy and replaces the original with it. The final file has the copy's timestamps, not the original. `-P` only stops ExifTool from changing the temp copy's modification time.
 
-Run `etsu date` after cleaning if you need a specific timestamp. Record the original timestamps first if you need to restore them.
+Run Set date after cleaning if you need a specific timestamp. Record the original timestamps first if you need to restore them.
 
-## The date prompt rejects my input
+## The date dialog rejects my time
 
-Use `DD-MM-YYYY HH:MM:SS`, for example `26-10-2026 22:47:52`. ETSU parses the value in the local time zone. Empty input cancels the command. Invalid input exits with code 1.
+Enter the time as `HH:MM:SS`, for example `22:47:52`. The date comes from the date picker. ETSU parses both in the local time zone. An invalid time shows a warning and keeps the dialog open. Cancel closes the dialog without changing the file.
 
-## The console window opens and closes
+## The window closes too quickly
 
-Successful runs wait for `Press enter to exit.` Press Enter to close the window. Menu actions open a console window by design.
+Clean and Set date close 1.5 seconds after success when the log is collapsed. Click Show log while the task runs to keep the window open. Read always stays open.
 
-If a command fails before the final wait, it prints the error and exits.
+If the window has already closed, open the log file. See [Configuration](configuration.md) for the log directory and settings.
+
+## An action failed
+
+The status line reads Failed. See log. The window stays open and expands the log. The failing step is followed by an `[ABORT]` line. If the original was already replaced, a `[ROLLBACK]` line follows and the original is restored.
+
+Click Copy log to copy the details. The log file has the same content when logging is enabled.
+
+## I cancelled an action
+
+Click Cancel while the task runs to stop it and keep the window open. The log shows `[CANCELLED]` and, if needed, `[ROLLBACK]`. Closing the window with the X during a run does the same, then closes the window after the rollback.
 
 ## The installer is unsigned
 
@@ -71,13 +76,14 @@ Uninstall removes `%APPDATA%\etsu` and its contents, including `.etsu`. Back it 
 
 ## Known limitations
 
-- `read` prints the raw ExifTool dump, not a categorized summary.
-- The Explorer menu is single-file. Batch work uses the CLI.
-- The installer always registers the Explorer menu. An option to install only the CLI is planned.
+- ETSU has no command-line interface yet. It runs from the Explorer menu only.
+- The Explorer menu is single-file.
+- Read shows the raw ExifTool dump, not a categorized summary.
 - ExifTool is not bundled.
-- Context-menu actions open a console window.
-- `clean` does not keep the original timestamps.
-- `clean` and `date` fail on files that are on a different drive from `%LOCALAPPDATA%`.
-- The Explorer menu is for files. `clean` and `date` expect file paths, not folders.
+- Clean does not keep the original timestamps.
+- Clean and Set date fail on files that are on a different drive from `%LOCALAPPDATA%`.
+- The Explorer menu is for files, not folders.
+- Each action opens its own window. ETSU does not prevent two windows from working on the same file.
+- Clean and Set date close after success when the log is collapsed.
 
 [Documentation index](index.md)

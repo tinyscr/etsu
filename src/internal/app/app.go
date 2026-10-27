@@ -1,7 +1,7 @@
 package app
 
 import (
-	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/tinyscr/etsu/internal/config"
@@ -23,7 +24,6 @@ var (
 )
 
 func Init() {
-	initConsole()
 	if exe, err := os.Executable(); err == nil {
 		BaseDir = filepath.Dir(exe)
 	}
@@ -55,43 +55,41 @@ func GeneralString(key, def string) string { return cfg.String("General", key, d
 func LogEnabled(tool string) bool          { return cfg.Bool(tool, "log", tool != "read") }
 func LogCount(tool string) int             { return cfg.Int(tool, "logCount", 10) }
 
-func FindExifTool() bool {
+func FindExifTool() error {
 	configured := GeneralString("exiftoolPATH", "null")
 
 	if !strings.EqualFold(configured, "null") {
 		if strings.Contains(configured, `"`) {
-			fmt.Fprintln(os.Stderr, "exiftoolPATH contains illegal quote character.")
-			return false
+			return errors.New("exiftoolPATH contains an illegal quote character")
 		}
 		if _, err := os.Stat(configured); err != nil {
-			fmt.Fprintln(os.Stderr, "exiftool not found at configured path: "+configured)
-			return false
+			return fmt.Errorf("ExifTool was not found at the configured path:\n%s", configured)
 		}
 		ExifPath = configured
 		ExifVersion = strings.TrimSpace(RunTool(ExifPath, "-ver"))
-		return true
+		return nil
 	}
 
 	if path, err := exec.LookPath("exiftool.exe"); err == nil {
 		ExifPath = path
 		ExifVersion = strings.TrimSpace(RunTool(path, "-ver"))
-		return true
+		return nil
 	}
 
 	local := filepath.Join(BaseDir, "exiftool.exe")
 	if _, err := os.Stat(local); err == nil {
 		ExifPath = local
 		ExifVersion = strings.TrimSpace(RunTool(local, "-ver"))
-		return true
+		return nil
 	}
 
-	fmt.Fprintln(os.Stderr, "exiftool.exe not found on PATH or in "+BaseDir)
-	fmt.Fprintln(os.Stderr, "Install ExifTool or set exiftoolPATH in "+ConfigPath()+".")
-	return false
+	return fmt.Errorf("ExifTool was not found.\n\nInstall ExifTool or set exiftoolPATH in:\n%s", ConfigPath())
 }
 
 func RunTool(exe string, args ...string) string {
-	out, err := exec.Command(exe, args...).Output()
+	cmd := exec.Command(exe, args...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	out, err := cmd.Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
@@ -103,46 +101,6 @@ func RunTool(exe string, args ...string) string {
 
 func SplitLines(s string) []string {
 	return strings.FieldsFunc(s, func(r rune) bool { return r == '\r' || r == '\n' })
-}
-
-type Color int
-
-const (
-	Gray Color = iota
-	DarkGray
-	Red
-	Green
-)
-
-func WriteHeader(mode string) {
-	fmt.Println()
-	fmt.Println(" ┌─ 🐾 ETSU   |   " + mode + "   |   Exiftool: v" + ExifVersion)
-	fmt.Println(" " + strings.Repeat("─", 46))
-	fmt.Println()
-}
-
-func WriteLine(text string, color ...Color) {
-	c := Gray
-	if len(color) > 0 {
-		c = color[0]
-	}
-	if vtEnabled {
-		fmt.Print(colorCode(c))
-	}
-	fmt.Println("  " + text)
-	if vtEnabled {
-		fmt.Print("\x1b[0m")
-	}
-}
-
-func WriteStep(num, total int, label, status string) {
-	WriteLine(fmt.Sprintf("[%d/%d] - %s%s", num, total, label, status), DarkGray)
-}
-
-func WriteSep() {
-	fmt.Println()
-	WriteLine(strings.Repeat("─", 46), DarkGray)
-	fmt.Println()
 }
 
 func WriteLog(prefix, outcome string, lines []string) {
@@ -179,13 +137,7 @@ func WriteLog(prefix, outcome string, lines []string) {
 	}
 }
 
-func WaitExit() int {
-	WriteLine("Press enter to exit.", DarkGray)
-	bufio.NewReader(os.Stdin).ReadString('\n')
-	return 0
-}
-
-func CopyFile(src, dst string) error {
+func CopyFile(ctx context.Context, src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -196,9 +148,27 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
-		return err
+
+	buf := make([]byte, 1<<20)
+	for {
+		if err := ctx.Err(); err != nil {
+			out.Close()
+			return err
+		}
+		n, readErr := in.Read(buf)
+		if n > 0 {
+			if _, err := out.Write(buf[:n]); err != nil {
+				out.Close()
+				return err
+			}
+		}
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			out.Close()
+			return readErr
+		}
 	}
 	return out.Close()
 }

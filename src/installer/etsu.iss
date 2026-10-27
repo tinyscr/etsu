@@ -36,7 +36,6 @@ VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
 SetupIconFile=..\icon.ico
-; Future: add an install-mode page (menu-only vs CLI-only).
 
 [Files]
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
