@@ -14,6 +14,7 @@ const usage = "ETSU runs from the Explorer context menu.\n\n" +
 	"Right-click a file and choose ETSU, then Read metadata, Clean metadata, or Set date."
 
 func main() {
+	ui.InitTheme()
 	app.Init()
 
 	action, file, ok := parseArgs(os.Args[1:])

@@ -20,18 +20,6 @@ The menu is registered for files, not folders, and for one selected file at a ti
 HKCU\Software\Classes\*\shell\etsu
 ```
 
-## Clean or Set date stops with a different disk drive error
-
-The error ends with:
-
-```text
-The system cannot move the file to a different disk drive.
-```
-
-ETSU copies the file to `%LOCALAPPDATA%\etsu\tmp` and then renames the copy into place. Windows cannot rename across drives. The original is restored.
-
-Move the file to the same drive as `%LOCALAPPDATA%`, run the action, then move it back. The log shows the failing step and a `[ROLLBACK]` line.
-
 ## Clean or Set date stops with a backup already exists error
 
 ETSU refuses to overwrite an existing `<file>.bak`. Inspect both files before you remove anything. If the original is intact, rename or delete the `.bak`. If the `.bak` is the only good copy, restore it by renaming it back to the original name.
@@ -70,7 +58,7 @@ The current build is not code-signed. Windows SmartScreen may warn. GitHub relea
 
 ## Uninstall leaves files
 
-The uninstaller removes the Explorer menu, installed files, `%APPDATA%\etsu`, `%LOCALAPPDATA%\etsu\logs`, and `%LOCALAPPDATA%\etsu\tmp`. Files you added to the install directory are left in place. Remove them manually if you do not need them.
+The uninstaller removes the Explorer menu, installed files, `%APPDATA%\etsu`, `%LOCALAPPDATA%\etsu\logs`, and any legacy `%LOCALAPPDATA%\etsu\tmp`. Files you added to the install directory are left in place. Remove them manually if you do not need them.
 
 Uninstall removes `%APPDATA%\etsu` and its contents, including `.etsu`. Back it up first if you want to keep the configuration.
 
@@ -78,10 +66,9 @@ Uninstall removes `%APPDATA%\etsu` and its contents, including `.etsu`. Back it 
 
 - ETSU has no command-line interface yet. It runs from the Explorer menu only.
 - The Explorer menu is single-file.
-- Read shows the raw ExifTool dump, not a categorized summary.
+- Read shows a tag/value table, not a categorized summary.
 - ExifTool is not bundled.
 - Clean does not keep the original timestamps.
-- Clean and Set date fail on files that are on a different drive from `%LOCALAPPDATA%`.
 - The Explorer menu is for files, not folders.
 - Each action opens its own window. ETSU does not prevent two windows from working on the same file.
 - Clean and Set date close after success when the log is collapsed.

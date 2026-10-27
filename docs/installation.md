@@ -62,6 +62,6 @@ etsu_v0.1.0_installer.exe /VERYSILENT /DIR="D:\Tools\ETSU"
 
 Uninstall from Settings > Apps, Revo Uninstaller, or `unins000.exe` in the install directory.
 
-The uninstaller removes the ETSU Explorer menu, the files it installed, `%APPDATA%\etsu` and its contents, `%LOCALAPPDATA%\etsu\logs`, and `%LOCALAPPDATA%\etsu\tmp`. Back up `%APPDATA%\etsu\.etsu` first if you want to keep the configuration. Files you added to the install directory are left in place.
+The uninstaller removes the ETSU Explorer menu, the files it installed, `%APPDATA%\etsu` and its contents, `%LOCALAPPDATA%\etsu\logs`, and any legacy `%LOCALAPPDATA%\etsu\tmp`. Back up `%APPDATA%\etsu\.etsu` first if you want to keep the configuration. Files you added to the install directory are left in place.
 
 [Documentation index](index.md)

@@ -39,10 +39,10 @@ If the file or a section is missing, ETSU uses the defaults.
 | --- | --- |
 | Config | `%APPDATA%\etsu\.etsu` |
 | Logs | `%LOCALAPPDATA%\etsu\logs\etsu\` |
-| Temp workspace | `%LOCALAPPDATA%\etsu\tmp\` |
+| Temp workspace | Beside the original file (`<original folder>\.etsu_<random>\`) |
 | Default install directory | `%LOCALAPPDATA%\Programs\ETSU` |
 
-The uninstaller removes `%APPDATA%\etsu`, `%LOCALAPPDATA%\etsu\logs`, and `%LOCALAPPDATA%\etsu\tmp`. Back up `.etsu` before uninstalling if you want to keep it.
+The uninstaller removes `%APPDATA%\etsu`, `%LOCALAPPDATA%\etsu\logs`, and any legacy `%LOCALAPPDATA%\etsu\tmp`. Back up `.etsu` before uninstalling if you want to keep it.
 
 ## Logs
 
@@ -58,7 +58,7 @@ The log panel in the task window shows the last 5,000 lines. The log file keeps 
 
 ## Temp files
 
-Clean and Set date copy files to `%LOCALAPPDATA%\etsu\tmp\etsu_<random>` and remove that directory when the run ends. The `.bak` files used during the swap are created next to the original file, not in the temp directory.
+Clean and Set date create a temporary directory beside the original file, copy into it, and remove it when the run ends. Keeping the copy on the same volume lets the swap use a rename. The `.bak` file used during the swap is also created next to the original file.
 
 ## ExifTool
 

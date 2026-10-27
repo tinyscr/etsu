@@ -56,6 +56,8 @@ func AskDate() (time.Time, bool) {
 		return time.Time{}, false
 	}
 
+	ApplyTheme(dlg)
+
 	if icon, err := walk.NewIconFromResourceId(iconResourceID); err == nil {
 		dlg.SetIcon(icon)
 	}

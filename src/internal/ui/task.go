@@ -20,6 +20,10 @@ const (
 	windowWidth     = 620
 	expandedHeight  = 440
 	collapsedHeight = 190
+	readWidth       = 760
+	readHeight      = 560
+	readMinWidth    = 600
+	readMinHeight   = 400
 	maxLogLines     = 5000
 	autoCloseDelay  = 1500 * time.Millisecond
 	// rsrc puts the manifest at resource ID 1 and the icon group at ID 2.
@@ -37,6 +41,8 @@ type Task struct {
 	progress *walk.ProgressBar
 	toggle   *walk.PushButton
 	log      *walk.TextEdit
+	table    *walk.TableView
+	model    *metadataModel
 	primary  *walk.PushButton
 	copy     *walk.PushButton
 
@@ -61,45 +67,41 @@ func NewTask(action, file string, when time.Time) (*Task, error) {
 		expanded: action == "read",
 	}
 	t.ctx, t.cancel = context.WithCancel(context.Background())
+	if action == "read" {
+		t.model = &metadataModel{}
+	}
 
-	height := collapsedHeight
-	toggleText := "Show log ▼"
-	if t.expanded {
-		height = expandedHeight
-		toggleText = "Hide log ▲"
+	width, height := windowWidth, collapsedHeight
+	minWidth, minHeight := 480, collapsedHeight
+	var children []Widget
+
+	if action == "read" {
+		width, height = readWidth, readHeight
+		minWidth, minHeight = readMinWidth, readMinHeight
+		children = t.readChildren()
+	} else {
+		toggleText := "Show log ▼"
+		if t.expanded {
+			height = expandedHeight
+			toggleText = "Hide log ▲"
+		}
+		children = t.taskChildren(toggleText)
 	}
 
 	err := MainWindow{
 		AssignTo: &t.mw,
 		Title:    "ETSU - " + actionTitle(action) + " - " + filepath.Base(file),
-		Size:     Size{Width: windowWidth, Height: height},
-		MinSize:  Size{Width: 480, Height: collapsedHeight},
+		Size:     Size{Width: width, Height: height},
+		MinSize:  Size{Width: minWidth, Height: minHeight},
 		Font:     Font{Family: "Segoe UI", PointSize: 9},
 		Layout:   VBox{Margins: Margins{Left: 10, Top: 10, Right: 10, Bottom: 10}, Spacing: 6},
-		Children: []Widget{
-			Label{AssignTo: &t.status, Text: "Starting..."},
-			ProgressBar{AssignTo: &t.progress, MaxValue: 100},
-			PushButton{AssignTo: &t.toggle, Text: toggleText, OnClicked: t.toggleLog},
-			TextEdit{
-				AssignTo: &t.log,
-				ReadOnly: true,
-				VScroll:  true,
-				Visible:  t.expanded,
-				Font:     Font{Family: "Consolas", PointSize: 9},
-			},
-			Composite{
-				Layout: HBox{MarginsZero: true, Spacing: 6},
-				Children: []Widget{
-					HSpacer{},
-					PushButton{AssignTo: &t.copy, Text: "Copy log", OnClicked: t.copyLog},
-					PushButton{AssignTo: &t.primary, Text: "Cancel", OnClicked: t.primaryClicked},
-				},
-			},
-		},
+		Children: children,
 	}.Create()
 	if err != nil {
 		return nil, err
 	}
+
+	ApplyTheme(t.mw)
 
 	if icon, err := walk.NewIconFromResourceId(iconResourceID); err == nil {
 		t.mw.SetIcon(icon)
@@ -109,6 +111,54 @@ func NewTask(action, file string, when time.Time) (*Task, error) {
 	t.mw.Starting().Attach(func() { t.start() })
 
 	return t, nil
+}
+
+func (t *Task) readChildren() []Widget {
+	return []Widget{
+		Label{AssignTo: &t.status, Text: "Reading metadata..."},
+		TableView{
+			AssignTo:            &t.table,
+			Model:               t.model,
+			AlternatingRowBG:    !currentTheme().dark,
+			LastColumnStretched: true,
+			StretchFactor:       1,
+			Columns: []TableViewColumn{
+				{Title: "Tag", Width: 240},
+				{Title: "Value", Width: 460},
+			},
+		},
+		Composite{
+			Layout: HBox{MarginsZero: true, Spacing: 6},
+			Children: []Widget{
+				HSpacer{},
+				PushButton{AssignTo: &t.copy, Text: "Copy", OnClicked: t.copyLog},
+				PushButton{AssignTo: &t.primary, Text: "Cancel", OnClicked: t.primaryClicked},
+			},
+		},
+	}
+}
+
+func (t *Task) taskChildren(toggleText string) []Widget {
+	return []Widget{
+		Label{AssignTo: &t.status, Text: "Starting..."},
+		ProgressBar{AssignTo: &t.progress, MaxValue: 100},
+		PushButton{AssignTo: &t.toggle, Text: toggleText, OnClicked: t.toggleLog},
+		TextEdit{
+			AssignTo: &t.log,
+			ReadOnly: true,
+			VScroll:  true,
+			Visible:  t.expanded,
+			Font:     Font{Family: "Consolas", PointSize: 9},
+		},
+		Composite{
+			Layout: HBox{MarginsZero: true, Spacing: 6},
+			Children: []Widget{
+				HSpacer{},
+				PushButton{AssignTo: &t.copy, Text: "Copy log", OnClicked: t.copyLog},
+				PushButton{AssignTo: &t.primary, Text: "Cancel", OnClicked: t.primaryClicked},
+			},
+		},
+	}
 }
 
 func (t *Task) Run() int {
@@ -139,13 +189,24 @@ func (t *Task) execute() error {
 
 func (t *Task) Progress(percent int, label string) {
 	t.mw.Synchronize(func() {
-		t.progress.SetValue(percent)
+		if t.progress != nil {
+			t.progress.SetValue(percent)
+		}
 		t.status.SetText(label)
 	})
 }
 
 func (t *Task) Log(line string) {
-	t.mw.Synchronize(func() { t.appendLog(line) })
+	t.mw.Synchronize(func() {
+		if t.action == "read" {
+			t.allLines = append(t.allLines, line)
+			if tag, value, ok := parseMetadataLine(line); ok && t.model != nil {
+				t.model.Add(tag, value)
+			}
+			return
+		}
+		t.appendLog(line)
+	})
 }
 
 func (t *Task) appendLog(line string) {
@@ -170,20 +231,38 @@ func (t *Task) finish(err error) {
 	switch {
 	case err == nil:
 		t.succeeded = true
-		t.progress.SetValue(100)
-		t.status.SetText("Done.")
+		if t.progress != nil {
+			t.progress.SetValue(100)
+		}
+		if t.action == "read" {
+			t.status.SetText(fmt.Sprintf("Done. %d fields.", t.model.RowCount()))
+		} else {
+			t.status.SetText("Done.")
+		}
 	case errors.Is(err, context.Canceled):
 		outcome = "CANCELLED"
-		t.appendLog("[CANCELLED] Operation cancelled.")
-		t.status.SetText("Cancelled.")
-		t.setExpanded(true)
+		if t.action == "read" {
+			t.status.SetText("Cancelled.")
+		} else {
+			t.appendLog("[CANCELLED] Operation cancelled.")
+			t.status.SetText("Cancelled.")
+			t.setExpanded(true)
+		}
 	default:
 		outcome = "FAILED"
 		if len(t.allLines) == 0 {
-			t.appendLog("[ABORT] " + err.Error())
+			if t.action == "read" {
+				t.allLines = append(t.allLines, "[ABORT] "+err.Error())
+			} else {
+				t.appendLog("[ABORT] " + err.Error())
+			}
 		}
-		t.status.SetText("Failed. See log.")
-		t.setExpanded(true)
+		if t.action == "read" {
+			t.status.SetText("Failed: " + err.Error())
+		} else {
+			t.status.SetText("Failed. See log.")
+			t.setExpanded(true)
+		}
 	}
 
 	app.WriteLog(t.action, outcome, t.allLines)
@@ -202,7 +281,7 @@ func (t *Task) toggleLog() {
 }
 
 func (t *Task) setExpanded(expanded bool) {
-	if t.expanded == expanded {
+	if t.log == nil || t.toggle == nil || t.expanded == expanded {
 		return
 	}
 	t.expanded = expanded
@@ -238,6 +317,12 @@ func (t *Task) scrollToEnd() {
 
 func (t *Task) copyLog() {
 	t.stopAutoClose()
+	if t.action == "read" {
+		if t.model != nil {
+			walk.Clipboard().SetText(t.model.Text())
+		}
+		return
+	}
 	walk.Clipboard().SetText(strings.Join(t.allLines, "\r\n"))
 }
 

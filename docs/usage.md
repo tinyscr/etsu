@@ -14,7 +14,7 @@ The menu is registered for files, not folders, and for one selected file at a ti
 
 | Action | Effect |
 | --- | --- |
-| Read metadata | Runs ExifTool and shows the raw output. The file is not modified. |
+| Read metadata | Runs ExifTool and shows metadata in a Tag/Value table. The file is not modified. |
 | Clean metadata | Removes metadata with `exiftool -all=`. |
 | Set date | Sets the EXIF dates and the filesystem modification and creation times. |
 
@@ -22,20 +22,22 @@ Clean removes metadata permanently. It does not keep a backup after a successful
 
 ## Task window
 
-Each action opens a small window with a status line, a progress bar, a log toggle, and two buttons.
+Read opens a table window. Clean and Set date open a smaller window with a progress bar and a collapsible log.
 
-The progress bar follows the operation phases: copy, metadata work, verify, replace, finish. Read has a shorter run and jumps from reading to done.
+The progress bar follows the copy, metadata, verify, replace, and finish phases. Read has no progress bar and no log panel.
 
 The log panel shows the raw operation log. It is read-only, selectable, and scrolls to the newest line. The panel keeps the last 5,000 lines. The log file keeps the full run when logging is enabled.
 
-- **Read metadata** opens with the log expanded and stays open after it finishes.
+- **Read metadata** shows the metadata table and stays open after it finishes.
 - **Clean metadata** and **Set date** open with the log collapsed. They close 1.5 seconds after success if the log is still collapsed.
 - Expanding the log or clicking Copy log keeps the window open.
-- A failed or cancelled action keeps the window open and expands the log.
+- A failed or cancelled action keeps the window open. Clean and Set date expand the log; Read shows the error in the status line.
 
 The main button says Cancel while the task runs and Close after it finishes. Closing the window during a run cancels the task and restores the original file. Cancel does the same without closing the window.
 
-Copy log copies the full log, including lines that are no longer visible in the panel, to the clipboard.
+Copy in Read copies the table as tag/value lines. Copy log in Clean and Set date copies the full log, including lines that are no longer visible in the panel, to the clipboard.
+
+The window follows the Windows light or dark theme when it opens. High contrast uses the system colors.
 
 ## Set date
 
@@ -45,8 +47,8 @@ ETSU sets the EXIF dates (`DateTimeOriginal`, `CreateDate`, `ModifyDate`) and th
 
 ## Errors
 
-When an action fails, the status line reads Failed. See log. The log shows the failing step and an `[ABORT]` line. If the file was already replaced, the log also shows a `[ROLLBACK]` line and the original is restored.
+When Clean or Set date fails, the status line reads Failed. See log. The log shows the failing step and an `[ABORT]` line. If the file was already replaced, the log also shows a `[ROLLBACK]` line and the original is restored. Read shows the error in its status line and has no log panel.
 
-Click Copy log to paste the details into a report. Logs are covered in [Configuration](configuration.md). The copy, verify, and swap steps are covered in [How it works](how-it-works.md).
+Click Copy or Copy log to paste the details into a report. Logs are covered in [Configuration](configuration.md). The copy, verify, and swap steps are covered in [How it works](how-it-works.md).
 
 [Documentation index](index.md)

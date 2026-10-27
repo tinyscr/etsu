@@ -22,10 +22,7 @@ func Process(ctx context.Context, file string, rep Reporter, stage2 string, appl
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(app.TempDir(), 0o755); err != nil {
-		return abort(rep, "Cannot create temp workspace: "+err.Error(), err)
-	}
-	tempDir, err := os.MkdirTemp(app.TempDir(), "etsu_")
+	tempDir, err := os.MkdirTemp(filepath.Dir(file), ".etsu_")
 	if err != nil {
 		return abort(rep, "Cannot create temp workspace: "+err.Error(), err)
 	}

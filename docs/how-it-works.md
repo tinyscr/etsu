@@ -6,7 +6,7 @@ ETSU is a Go program with a native Win32 GUI. The installer copies the binary, s
 
 Each Explorer action starts one short-lived window. The window runs the operation on a background goroutine and reports progress to the UI thread. It stays responsive while ExifTool runs.
 
-The reporter has two jobs: set the progress bar and append raw log lines. Progress is phase-based, not parsed from ExifTool output. The bar moves to 0 when copying starts, 20 before the metadata step, 40 before verification, 60 before the swap, 80 before finishing, and 100 when done. Read uses 20 for the ExifTool call and 100 for done.
+The reporter updates the status line and, for Clean and Set date, the progress bar. Progress is phase-based, not parsed from ExifTool output. The bar moves to 0 when copying starts, 20 before the metadata step, 40 before verification, 60 before the swap, 80 before finishing, and 100 when done. Read uses 20 for the ExifTool call and 100 for done, without a progress bar.
 
 The log panel keeps the last 5,000 lines. Older lines are dropped from the panel, but the full run stays in memory for Copy log and in the log file when logging is enabled. See [Configuration](configuration.md) for log settings.
 
@@ -42,7 +42,7 @@ After the swap, ETSU sets the creation time on the final file again with `SetFil
 
 Clean and Set date use the same pipeline:
 
-1. Copy the file to `%LOCALAPPDATA%\etsu\tmp\etsu_<random>\file<ext>`. ETSU compares the source and copy sizes.
+1. Copy the file to a temporary directory beside the original (`.etsu_<random>\file<ext>`). ETSU compares the source and copy sizes.
 2. Run the ExifTool operation on the temp copy.
 3. Verify that the temp file exists, is not empty, and can be opened for reading.
 4. Refuse to overwrite an existing `<file>.bak`. Rename the original to `<file>.bak`, move the temp file into the original path, and check that the result is not empty.
@@ -71,12 +71,12 @@ Set date writes the EXIF dates and the filesystem modification and creation time
 
 ## Drive boundaries
 
-The temp workspace is on the `%LOCALAPPDATA%` drive. Windows cannot rename a file across drives, so Clean and Set date fail at the swap step when the target file is on another drive. ETSU restores the original. [Troubleshooting](troubleshooting.md) describes the workaround.
+The temp workspace is created in the original file's directory, so the swap stays on one volume. ETSU needs write permission in that directory; the swap already needs it for the `.bak` file.
 
 ## Design choices
 
 - The original is not modified until the temp copy passes verification.
-- Read shows the raw ExifTool output so tags that ETSU does not categorize are still visible.
+- Read shows every tag in the table so tags that ETSU does not categorize are still visible.
 - The installer is per-user and writes only to AppData and HKCU.
 - The Explorer menu is single-file. ETSU has no command-line interface yet.
 - Each action opens its own window. ETSU does not coordinate between windows.

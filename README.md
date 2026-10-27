@@ -12,7 +12,7 @@ The installer copies `etsu.exe`, creates `%APPDATA%\etsu\.etsu` when missing, re
 
 Right-click a file, open the ETSU submenu, and choose Read metadata, Clean metadata, or Set date. On Windows 11, the submenu is under Show more options.
 
-Each action opens a small window with a progress bar and a raw log panel. Read stays open. Clean and Set date close 1.5 seconds after success when the log is collapsed. Errors keep the window open and expand the log. See [Usage](docs/usage.md).
+Read opens a metadata table and stays open. Clean and Set date open a smaller window with a progress bar and a collapsible log; they close 1.5 seconds after success when the log is collapsed. Errors keep the window open. The window follows the Windows light or dark theme. See [Usage](docs/usage.md).
 
 ## Documentation
 
