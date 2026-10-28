@@ -6,7 +6,6 @@ ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates
 
 | Guide | Contents |
 | --- | --- |
-| [Installation](installation.md) | Install, upgrade, silent install, and uninstall. |
 | [Usage](usage.md) | Explorer menu, task window, log, and date dialog. |
 | [Configuration](configuration.md) | Config keys, logs, temp files, and ExifTool lookup. |
 | [How it works](how-it-works.md) | Read, clean, date, copy, verify, and replace. |
@@ -22,4 +21,4 @@ ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates
 
 ETSU installs for the current user. It does not need administrator rights and is not a portable app.
 
-Source: [github.com/tinyscr/etsu](https://github.com/tinyscr/etsu).
+Install and build commands are in the top-level [README](../README.md).

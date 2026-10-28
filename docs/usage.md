@@ -50,4 +50,4 @@ Closing the window during a run cancels the operation. If cancellation happens b
 
 Logs are covered in [Configuration](configuration.md). The copy, verify, and replace steps are covered in [How it works](how-it-works.md).
 
-[Documentation index](index.md)
+[Documentation](README.md)

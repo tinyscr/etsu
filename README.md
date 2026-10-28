@@ -1,12 +1,12 @@
 # ETSU
 
-ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). It runs from the Windows Explorer context menu. Published by TinyScripts.
+ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). It runs from the Windows Explorer context menu.
 
 ## Install
 
 Run the installer in `dist\`, for example `dist\v0.1.0_installer.exe`. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
-The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool.
+The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool. Uninstall from Settings > Apps.
 
 ## Use
 
@@ -16,13 +16,7 @@ Read shows the ExifTool output as a tag/value text view. Clean and Set date show
 
 ## Documentation
 
-- [Documentation index](docs/index.md)
-- [Installation](docs/installation.md)
-- [Usage](docs/usage.md)
-- [Configuration](docs/configuration.md)
-- [How it works](docs/how-it-works.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Development](docs/development.md)
+See [docs](docs/README.md) for usage, configuration, internals, troubleshooting, and development.
 
 ## Build
 
@@ -46,4 +40,4 @@ To build, install .NET Framework 4.5 or later and Inno Setup 6. See [Development
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Source: [github.com/tinyscr/etsu](https://github.com/tinyscr/etsu).
+MIT. See [LICENSE](LICENSE).

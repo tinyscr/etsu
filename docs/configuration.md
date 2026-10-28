@@ -75,4 +75,4 @@ ETSU does not bundle ExifTool. Install it from [exiftool.org](https://exiftool.o
 
 ETSU uses `exiftoolPATH` when it is not `null`. If that path does not exist, ETSU shows an error and does not fall back to PATH. Clean and date logs show the detected ExifTool version.
 
-[Documentation index](index.md)
+[Documentation](README.md)

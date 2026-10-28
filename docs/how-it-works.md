@@ -82,4 +82,4 @@ The operation workspace is created in the original file's directory, so the repl
 - Each action opens its own window. ETSU does not coordinate between windows.
 - ETSU does not keep an automatic rollback copy after a successful run.
 
-[Documentation index](index.md)
+[Documentation](README.md)

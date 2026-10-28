@@ -6,7 +6,7 @@
 - .NET Framework 4.5 or later. The build uses the `csc.exe` that ships with .NET Framework, so it needs no SDK or NuGet packages.
 - [Inno Setup](https://jrsoftware.org/isinfo.php) 6.
 
-The app is a C# WinForms program. It uses `System.Windows.Forms`, `System.Drawing`, and the .NET Framework base libraries. It does not use Go, a bundled runtime, or WebView2.
+The app is a C# WinForms program. It uses `System.Windows.Forms`, `System.Drawing`, and the .NET Framework base libraries. It does not use a bundled runtime or WebView2.
 
 ## Build
 
@@ -82,17 +82,7 @@ Build outputs are `bin\etsu.exe`, `obj\Version.g.cs`, `bin\tests\etsu-tests.exe`
 
 ## Installer
 
-`src\Installer\etsu.iss` builds a per-user installer. It uses:
-
-- a stable AppId, `{81ADEFE9-F5E3-4A42-8DF5-5D7E9AE39925}`
-- `PrivilegesRequired=lowest`
-- `DefaultDirName={localappdata}\Programs\ETSU`
-- `LicenseFile=..\..\LICENSE`
-- `SetupIconFile=..\Assets\icon.ico`
-- `OutputBaseFilename=v{#AppVersion}_installer`
-- HKCU registry entries for the Explorer submenu and the uninstall entry
-
-`src\Installer\default.ini` is copied to `config.ini` in the install directory only when the file is missing. The installer creates `logs\etsu` and `tmp` under the install directory. The uninstaller removes `config.ini`, `logs`, and `tmp`.
+`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. It seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, and `tmp`.
 
 ## Icon and manifest resources
 
@@ -123,4 +113,4 @@ The window is the only output. Use copies when you test Clean or Set date. For n
 
 Run `.\test.ps1` after code changes.
 
-[Documentation index](index.md)
+[Documentation](README.md)

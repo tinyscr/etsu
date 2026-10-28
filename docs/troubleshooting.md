@@ -75,4 +75,4 @@ Uninstall removes `config.ini` from the install directory. Back it up first if y
 - Each action opens its own window. ETSU does not prevent two windows from working on the same file.
 - ETSU does not keep an automatic rollback copy after a successful run.
 
-[Documentation index](index.md)
+[Documentation](README.md)
