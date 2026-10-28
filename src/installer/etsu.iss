@@ -39,7 +39,11 @@ SetupIconFile=..\icon.ico
 
 [Files]
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "default.etsu"; DestDir: "{userappdata}\etsu"; DestName: ".etsu"; Flags: onlyifdoesntexist
+Source: "default.ini"; DestDir: "{app}"; DestName: "config.ini"; Flags: onlyifdoesntexist
+
+[Dirs]
+Name: "{app}\logs\etsu"
+Name: "{app}\tmp"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu"; ValueType: string; ValueName: "MUIVerb"; ValueData: "ETSU"; Flags: uninsdeletekey
@@ -59,10 +63,9 @@ Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: str
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" date ""%L"""
 
 [UninstallDelete]
-Type: filesandordirs; Name: "{userappdata}\etsu"
-Type: filesandordirs; Name: "{localappdata}\etsu\logs"
-Type: filesandordirs; Name: "{localappdata}\etsu\tmp"
-Type: dirifempty; Name: "{localappdata}\etsu"
+Type: files; Name: "{app}\config.ini"
+Type: filesandordirs; Name: "{app}\logs"
+Type: filesandordirs; Name: "{app}\tmp"
 
 [Code]
 function ExifToolOnPath(): Boolean;
@@ -97,7 +100,7 @@ function ExifToolAvailable(): Boolean;
 var
   Configured: string;
 begin
-  Configured := GetIniString('General', 'exiftoolPATH', 'null', ExpandConstant('{userappdata}\etsu\.etsu'));
+  Configured := GetIniString('General', 'exiftoolPATH', 'null', ExpandConstant('{app}\config.ini'));
   if CompareText(Configured, 'null') <> 0 then
   begin
     Result := FileExists(Configured);
@@ -111,6 +114,6 @@ begin
   if CurStep = ssPostInstall then
     if not ExifToolAvailable() then
       MsgBox('ExifTool was not found on PATH.' + #13#10 +
-             'Install ExifTool or set exiftoolPATH in ' + ExpandConstant('{userappdata}\etsu\.etsu') +
+             'Install ExifTool or set exiftoolPATH in ' + ExpandConstant('{app}\config.ini') +
              ' before using etsu.', mbInformation, MB_OK);
 end;

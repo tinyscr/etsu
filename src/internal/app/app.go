@@ -23,32 +23,41 @@ var (
 	cfg         *config.File
 )
 
-func Init() {
+func Init() error {
+	initConsole()
 	if exe, err := os.Executable(); err == nil {
 		BaseDir = filepath.Dir(exe)
 	}
+	if BaseDir == "" {
+		BaseDir = "."
+	}
+
+	if err := ensureWritable(TempDir()); err != nil {
+		return err
+	}
+
 	cfg = config.Load(ConfigPath())
+	return nil
 }
 
-func appData() string {
-	if v := os.Getenv("APPDATA"); v != "" {
-		return v
+func ensureWritable(dir string) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("install directory is not writable: %s", BaseDir)
 	}
-	d, _ := os.UserConfigDir()
-	return d
-}
 
-func localAppData() string {
-	if v := os.Getenv("LOCALAPPDATA"); v != "" {
-		return v
+	probe, err := os.CreateTemp(dir, ".write-test-")
+	if err != nil {
+		return fmt.Errorf("install directory is not writable: %s", BaseDir)
 	}
-	d, _ := os.UserCacheDir()
-	return d
+	name := probe.Name()
+	_ = probe.Close()
+	_ = os.Remove(name)
+	return nil
 }
 
-func ConfigDir() string  { return filepath.Join(appData(), "etsu") }
-func ConfigPath() string { return filepath.Join(ConfigDir(), ".etsu") }
-func LogDir() string     { return filepath.Join(localAppData(), "etsu", "logs", "etsu") }
+func ConfigPath() string { return filepath.Join(BaseDir, "config.ini") }
+func LogDir() string     { return filepath.Join(BaseDir, "logs", "etsu") }
+func TempDir() string    { return filepath.Join(BaseDir, "tmp") }
 
 func GeneralString(key, def string) string { return cfg.String("General", key, def) }
 func LogEnabled(tool string) bool          { return cfg.Bool(tool, "log", tool != "read") }
