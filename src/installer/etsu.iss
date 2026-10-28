@@ -24,7 +24,7 @@ DisableDirPage=no
 LicenseFile=..\..\LICENSE
 PrivilegesRequired=lowest
 OutputDir=..\..\dist
-OutputBaseFilename=etsu_v{#AppVersion}_installer
+OutputBaseFilename=v{#AppVersion}_installer
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -35,7 +35,7 @@ UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
-SetupIconFile=..\icon.ico
+SetupIconFile=..\Assets\icon.ico
 
 [Files]
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
