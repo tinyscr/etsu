@@ -111,14 +111,14 @@ func SplitLines(s string) []string {
 	return strings.FieldsFunc(s, func(r rune) bool { return r == '\r' || r == '\n' })
 }
 
-func WriteLog(prefix string, lines []string) {
+func WriteLog(prefix string, lines []string) string {
 	if !LogEnabled(prefix) {
-		return
+		return ""
 	}
 
 	dir := LogDir()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return
+		return ""
 	}
 
 	now := time.Now()
@@ -129,7 +129,7 @@ func WriteLog(prefix string, lines []string) {
 		text += "\n"
 	}
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
-		return
+		return ""
 	}
 
 	files, _ := filepath.Glob(filepath.Join(dir, prefix+"_*.log"))
@@ -139,6 +139,11 @@ func WriteLog(prefix string, lines []string) {
 		os.Remove(files[0])
 		files = files[1:]
 	}
+
+	if _, err := os.Stat(path); err != nil {
+		return ""
+	}
+	return path
 }
 
 func CopyFile(ctx context.Context, src, dst string) error {

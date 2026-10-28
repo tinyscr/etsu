@@ -24,7 +24,7 @@ rem App icon and manifest are embedded from src\cmd\etsu\rsrc_windows_amd64.syso
 rem Regenerate after changing src\icon.ico or src\etsu.manifest:
 rem   rsrc -arch amd64 -ico src\icon.ico -manifest src\etsu.manifest -o src\cmd\etsu\rsrc_windows_amd64.syso
 echo Building etsu...
-go build -C src -trimpath -buildvcs=false -ldflags "-s -w -X github.com/tinyscr/etsu/internal/app.Version=%VERSION%" -o ..\bin\etsu.exe .\cmd\etsu
+go build -C src -trimpath -buildvcs=false -ldflags "-s -w -H windowsgui -X github.com/tinyscr/etsu/internal/app.Version=%VERSION%" -o ..\bin\etsu.exe .\cmd\etsu
 if errorlevel 1 exit /b 1
 
 echo Building installer...

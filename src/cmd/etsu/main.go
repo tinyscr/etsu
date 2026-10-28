@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"os"
-	"os/signal"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/tinyscr/etsu/internal/app"
 	"github.com/tinyscr/etsu/internal/ops"
@@ -17,65 +18,75 @@ func main() {
 }
 
 func run(args []string) int {
-	ui.Init()
+	// Win32 windows and their message queues are tied to one OS thread.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	if err := app.Init(); err != nil {
-		ui.WriteLine(err.Error(), ui.Red)
-		ui.WaitExit()
+		ui.ShowError("ETSU", err.Error())
 		return 1
 	}
 
 	action, file, ok := parseArgs(args)
 	if !ok {
-		ui.WriteLine("Usage: etsu read|clean|date <file>", ui.DarkGray)
-		ui.WriteLine("ETSU normally runs from the Explorer context menu.", ui.DarkGray)
-		ui.WaitExit()
+		ui.ShowInfo("ETSU", "Usage: etsu read|clean|date <file>\n\nETSU normally runs from the Explorer context menu.")
 		return 2
 	}
 
 	if err := app.FindExifTool(); err != nil {
-		ui.WriteLine(err.Error(), ui.Red)
-		ui.WaitExit()
+		ui.ShowError("ETSU", err.Error())
 		return 1
 	}
 
-	rep := &ui.Reporter{AppVersion: app.Version, ExifVersion: app.ExifVersion}
-	rep.Header(action, file)
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
-	var err error
-
-	switch action {
-	case "read":
-		err = ops.Read(ctx, file, rep)
-	case "clean":
-		err = ops.Clean(ctx, file, rep)
-	case "date":
-		when, ok := ui.PromptDate()
+	var when time.Time
+	if action == "date" {
+		when, ok = ui.PromptDate()
 		if !ok {
-			ui.WaitExit()
 			return 0
 		}
-		err = ops.Date(ctx, file, when, rep)
 	}
 
-	app.WriteLog(action, rep.Lines)
-
-	switch {
-	case err == nil:
-		ui.WaitExit()
-		return 0
-	case errors.Is(err, context.Canceled):
-		ui.WriteLine("Cancelled.", ui.Yellow)
-		ui.WaitExit()
-		return 1
-	default:
-		ui.WriteLine("Failed: "+err.Error(), ui.Red)
-		ui.WaitExit()
+	win, err := ui.NewWindow(action, file)
+	if err != nil {
+		ui.ShowError("ETSU", err.Error())
 		return 1
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	win.SetCancel(cancel)
+
+	rep := &ui.Reporter{
+		AppVersion:  app.Version,
+		ExifVersion: app.ExifVersion,
+		Sink:        win.Append,
+	}
+	rep.Header(action, file)
+	win.Show()
+
+	go func() {
+		var opErr error
+		switch action {
+		case "read":
+			opErr = ops.Read(ctx, file, rep)
+		case "clean":
+			opErr = ops.Clean(ctx, file, rep)
+		case "date":
+			opErr = ops.Date(ctx, file, when, rep)
+		}
+
+		switch {
+		case opErr == nil:
+		case errors.Is(opErr, context.Canceled):
+			win.Append("Cancelled.")
+		default:
+			win.Append("Failed: " + opErr.Error())
+		}
+
+		win.Finish(opErr, app.WriteLog(action, rep.Lines))
+	}()
+
+	return win.Run()
 }
 
 func parseArgs(args []string) (action, file string, ok bool) {
