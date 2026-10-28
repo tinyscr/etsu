@@ -1,4 +1,12 @@
-bin/
-dist/
+# Build outputs
+/bin/
+/dist/
+/obj/
+/logs/
+/.vs/
 *.user
-.vs/
+*.suo
+
+# Local Windows launchers
+/build.bat
+/test.bat
