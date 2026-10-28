@@ -19,18 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: src/go.mod
-
-      - name: Build app
+      - name: Run tests
         shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          New-Item -ItemType Directory bin -Force | Out-Null
-          go build -C src -trimpath -ldflags "-s -w -H windowsgui" -o ../bin/etsu.exe ./cmd/etsu
-          if ($LASTEXITCODE -ne 0) { throw "go build failed" }
-          if (-not (Test-Path "bin/etsu.exe")) { throw "etsu.exe was not built" }
+        run: .\test.ps1
 
       - name: Build installer
         shell: pwsh
@@ -55,15 +46,24 @@ jobs:
           }
           if (-not $iscc) { throw "Inno Setup compiler not found" }
 
-          New-Item -ItemType Directory dist -Force | Out-Null
-          & $iscc "/DAppVersion=$version" "src\installer\etsu.iss"
-          if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
+          .\build.ps1 -Version $version
+          if ($LASTEXITCODE -ne 0) { throw "build.ps1 failed" }
 
-          $setup = "dist/etsu_v${version}_installer.exe"
+          $setup = "dist/v${version}_installer.exe"
           if (-not (Test-Path $setup)) { throw "Setup exe was not built" }
-          $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  etsu_v${version}_installer.exe" | Set-Content "dist/SHA256SUMS.txt" -Encoding ascii
+
+          $checksums = "dist/SHA256SUMS.txt"
+          if (-not (Test-Path $checksums)) { throw "SHA256SUMS.txt was not built" }
+
+          $checksumParts = (Get-Content $checksums -Raw).Trim() -split '\s+', 2
+          if ($checksumParts.Count -ne 2 -or $checksumParts[1] -ne (Split-Path $setup -Leaf)) {
+            throw "SHA256SUMS.txt does not reference the installer"
+          }
+          $actual = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $checksumParts[0]) { throw "SHA256SUMS.txt does not match the installer" }
+
           "SETUP=$setup" >> $env:GITHUB_ENV
+          "CHECKSUMS=$checksums" >> $env:GITHUB_ENV
 
       - name: Create draft release
         shell: pwsh
@@ -72,6 +72,6 @@ jobs:
           TAG: ${{ inputs.tag }}
         run: |
           $ErrorActionPreference = "Stop"
-          gh release create $env:TAG $env:SETUP "dist/SHA256SUMS.txt" `
+          gh release create $env:TAG $env:SETUP $env:CHECKSUMS `
             --draft --target $env:GITHUB_SHA --title $env:TAG --notes "etsu $env:TAG"
           if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
