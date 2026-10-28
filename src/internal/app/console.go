@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"golang.org/x/sys/windows"
 )
@@ -12,7 +15,12 @@ import (
 var (
 	vtEnabled bool
 	stdin     = bufio.NewReader(os.Stdin)
+	stepLine  = regexp.MustCompile(`^\[(\d+)/(\d+)\] `)
 )
+
+const ruleWidth = 54
+
+var rule = strings.Repeat("━", ruleWidth)
 
 func initConsole() {
 	_ = windows.SetConsoleOutputCP(65001)
@@ -32,7 +40,6 @@ const (
 	Gray Color = iota
 	DarkGray
 	Red
-	Green
 	Yellow
 )
 
@@ -42,20 +49,11 @@ func colorCode(c Color) string {
 		return "\x1b[90m"
 	case Red:
 		return "\x1b[31m"
-	case Green:
-		return "\x1b[32m"
 	case Yellow:
 		return "\x1b[33m"
 	default:
 		return "\x1b[37m"
 	}
-}
-
-func WriteHeader(mode string) {
-	fmt.Println()
-	fmt.Println("  ETSU  |  " + mode + "  |  ExifTool v" + ExifVersion)
-	fmt.Println("  " + strings.Repeat("-", 56))
-	fmt.Println()
 }
 
 func WriteLine(text string, color ...Color) {
@@ -72,22 +70,14 @@ func WriteLine(text string, color ...Color) {
 	}
 }
 
-func WriteSep() {
-	fmt.Println()
-	WriteLine(strings.Repeat("-", 56), DarkGray)
-	fmt.Println()
-}
-
-func WriteStep(num, total int, label, status string) {
-	WriteLine(fmt.Sprintf("[%d/%d] - %s%s", num, total, label, status), DarkGray)
-}
-
 func ReadLine() string {
 	line, _ := stdin.ReadString('\n')
 	return strings.TrimSpace(line)
 }
 
 func WaitExit() {
+	fmt.Println()
+	fmt.Println()
 	WriteLine("Press enter to exit.", DarkGray)
 	_, _ = stdin.ReadString('\n')
 }
@@ -98,9 +88,52 @@ type ConsoleReporter struct {
 	Lines []string
 }
 
+func (r *ConsoleReporter) Header(operation, file string) {
+	lines := []string{
+		"┏┓  ┏┳┓  ┏┓  ┳┳",
+		"┣    ┃   ┗┓  ┃┃",
+		"┗┛   ┻   ┗┛  ┗┛",
+		rule,
+		" App: " + Version + " | Exiftool: " + ExifVersion + " | Operation: " + operation,
+		"",
+		" File(s): " + file,
+		rule,
+		"",
+	}
+	for _, line := range lines {
+		r.write(line)
+	}
+}
+
 func (r *ConsoleReporter) Progress(int, string) {}
 
 func (r *ConsoleReporter) Log(line string) {
+	m := stepLine.FindStringSubmatch(line)
+	if m == nil {
+		r.write(line)
+		return
+	}
+
+	n, _ := strconv.Atoi(m[1])
+	if n > 1 {
+		r.blank(2)
+	}
+	r.write(line)
+
+	width := ruleWidth
+	if n > 1 {
+		width = utf8.RuneCountInString(line) + 2
+	}
+	r.write(strings.Repeat("━", width))
+}
+
+func (r *ConsoleReporter) write(line string) {
 	r.Lines = append(r.Lines, line)
 	fmt.Println(line)
+}
+
+func (r *ConsoleReporter) blank(n int) {
+	for range n {
+		r.write("")
+	}
 }

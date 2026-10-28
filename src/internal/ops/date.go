@@ -16,9 +16,8 @@ func Date(ctx context.Context, file string, dt time.Time, rep Reporter) error {
 		return fmt.Errorf("File not found: %s", file)
 	}
 
-	rep.Log("ExifTool: " + app.ExifVersion + " (" + app.ExifPath + ")")
-	rep.Log("File: " + file)
 	rep.Log("Target date: " + dt.Format("02-01-2006 15:04:05"))
+	rep.Log("")
 
 	exifDate := dt.Format("2006:01:02 15:04:05")
 	err := Process(ctx, file, rep, "Setting date", func(temp, orig string) error {
@@ -53,7 +52,6 @@ func Date(ctx context.Context, file string, dt time.Time, rep Reporter) error {
 		rep.Log("Warning: could not set creation time on " + filepath.Base(file) + ": " + err.Error())
 	}
 
-	rep.Log("")
-	rep.Log("All done. " + filepath.Base(file) + " date set in place.")
+	rep.Log("All done. 1 file date set in place.")
 	return nil
 }

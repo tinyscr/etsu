@@ -31,7 +31,6 @@ func Process(ctx context.Context, file string, rep Reporter, stage2 string, appl
 	temp := filepath.Join(tempDir, "file"+filepath.Ext(file))
 
 	rep.Progress(0, "Copying to temp workspace")
-	rep.Log("")
 	rep.Log("[1/5] Copying to temp workspace")
 
 	if err := app.CopyFile(ctx, file, temp); err != nil {
@@ -57,7 +56,6 @@ func Process(ctx context.Context, file string, rep Reporter, stage2 string, appl
 	}
 
 	rep.Progress(20, stage2)
-	rep.Log("")
 	rep.Log("[2/5] " + stage2)
 	if err := apply(temp, file); err != nil {
 		return err
@@ -68,7 +66,6 @@ func Process(ctx context.Context, file string, rep Reporter, stage2 string, appl
 	}
 
 	rep.Progress(40, "Verifying")
-	rep.Log("")
 	rep.Log("[3/5] Verifying")
 	info, err := os.Stat(temp)
 	if err != nil {
@@ -88,9 +85,8 @@ func Process(ctx context.Context, file string, rep Reporter, stage2 string, appl
 		return err
 	}
 
-	rep.Progress(60, "Replacing original")
-	rep.Log("")
-	rep.Log("[4/5] Replacing original")
+	rep.Progress(60, "Replacing originals")
+	rep.Log("[4/5] Replacing originals")
 
 	bak := file + ".bak"
 	if _, err := os.Stat(bak); err == nil {
@@ -126,14 +122,13 @@ func Process(ctx context.Context, file string, rep Reporter, stage2 string, appl
 	if err != nil || info.Size() == 0 {
 		return abort(rep, "Final file missing or empty after swap: "+filepath.Base(file), fmt.Errorf("missing or empty"))
 	}
-	rep.Log("Swapped OK: " + file)
+	rep.Log("Swapped OK: 1 file")
 
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 
 	rep.Progress(80, "Finishing")
-	rep.Log("")
 	rep.Log("[5/5] Finishing")
 	if err := os.Remove(bak); err != nil {
 		return abort(rep, "Could not remove backup: "+filepath.Base(bak)+": "+err.Error(), err)

@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	Version     = "0.1.0"
 	ExifPath    string
 	ExifVersion string
 	BaseDir     string
@@ -111,7 +112,7 @@ func SplitLines(s string) []string {
 	return strings.FieldsFunc(s, func(r rune) bool { return r == '\r' || r == '\n' })
 }
 
-func WriteLog(prefix, outcome string, lines []string) {
+func WriteLog(prefix string, lines []string) {
 	if !LogEnabled(prefix) {
 		return
 	}
@@ -124,15 +125,11 @@ func WriteLog(prefix, outcome string, lines []string) {
 	now := time.Now()
 	path := filepath.Join(dir, prefix+"_"+now.Format("20060102_150405")+".log")
 
-	var b strings.Builder
-	b.WriteString("ExifTool " + prefix + " Log\n")
-	b.WriteString("Timestamp : " + now.Format("2006-01-02 15:04:05") + "\n")
-	b.WriteString("Outcome   : " + outcome + "\n")
-	b.WriteString("----------------------------------------\n\n")
-	for _, line := range lines {
-		b.WriteString(line + "\n")
+	text := strings.Join(lines, "\n")
+	if text != "" {
+		text += "\n"
 	}
-	if err := os.WriteFile(path, []byte(b.String()), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
 		return
 	}
 

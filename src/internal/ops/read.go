@@ -15,7 +15,6 @@ func Read(ctx context.Context, file string, rep Reporter) error {
 		return fmt.Errorf("File not found: %s", file)
 	}
 
-	rep.Log("File: " + file)
 	rep.Progress(20, "Reading metadata")
 
 	out, err := runExif(ctx, file)
@@ -30,6 +29,8 @@ func Read(ctx context.Context, file string, rep Reporter) error {
 		return err
 	}
 
+	rep.Log("")
+	rep.Log("All done.")
 	rep.Progress(100, "Done")
 	return nil
 }

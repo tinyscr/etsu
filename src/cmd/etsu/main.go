@@ -38,12 +38,12 @@ func run(args []string) int {
 		return 1
 	}
 
-	app.WriteHeader(actionTitle(action))
+	rep := &app.ConsoleReporter{}
+	rep.Header(action, file)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	rep := &app.ConsoleReporter{}
 	var err error
 
 	switch action {
@@ -60,19 +60,10 @@ func run(args []string) int {
 		err = ops.Date(ctx, file, when, rep)
 	}
 
-	outcome := "SUCCESS"
-	if err != nil {
-		if errors.Is(err, context.Canceled) {
-			outcome = "CANCELLED"
-		} else {
-			outcome = "FAILED"
-		}
-	}
-	app.WriteLog(action, outcome, rep.Lines)
+	app.WriteLog(action, rep.Lines)
 
 	switch {
 	case err == nil:
-		app.WriteLine("Done.", app.Green)
 		app.WaitExit()
 		return 0
 	case errors.Is(err, context.Canceled):
@@ -100,19 +91,6 @@ func promptDate() (time.Time, bool) {
 		return time.Time{}, false
 	}
 	return dt, true
-}
-
-func actionTitle(action string) string {
-	switch action {
-	case "read":
-		return "Read metadata"
-	case "clean":
-		return "Clean metadata"
-	case "date":
-		return "Set date"
-	default:
-		return action
-	}
 }
 
 func parseArgs(args []string) (action, file string, ok bool) {

@@ -19,9 +19,6 @@ func Clean(ctx context.Context, file string, rep Reporter) error {
 		return fmt.Errorf("File not found: %s", file)
 	}
 
-	rep.Log("ExifTool: " + app.ExifVersion + " (" + app.ExifPath + ")")
-	rep.Log("File: " + file)
-
 	err := Process(ctx, file, rep, "Cleaning metadata", func(temp, orig string) error {
 		out, runErr := runExif(ctx, "-all=", "-overwrite_original", "-P", "-v", temp)
 		if runErr != nil {
@@ -54,7 +51,6 @@ func Clean(ctx context.Context, file string, rep Reporter) error {
 		return err
 	}
 
-	rep.Log("")
-	rep.Log("All done. " + filepath.Base(file) + " cleaned in place.")
+	rep.Log("All done. 1 file cleaned in place.")
 	return nil
 }
