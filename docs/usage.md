@@ -1,6 +1,6 @@
 # Usage
 
-ETSU runs from the Explorer context menu. It has no command-line interface yet and no file picker. Each action works on the file you right-clicked.
+ETSU runs from the Explorer context menu. It has no file picker. Each action works on the file you right-clicked, and the executable accepts the three action names that the menu passes to it.
 
 ## Open the menu
 
@@ -14,7 +14,7 @@ The menu is registered for files, not folders, and for one selected file at a ti
 
 | Action | Effect |
 | --- | --- |
-| Read metadata | Runs ExifTool and shows metadata in a Tag/Value table. The file is not modified. |
+| Read metadata | Runs ExifTool and shows the output as a tag/value text view. The file is not modified. |
 | Clean metadata | Removes metadata with `exiftool -all=`. |
 | Set date | Sets the EXIF dates and the filesystem modification and creation times. |
 
@@ -22,33 +22,32 @@ Clean removes metadata permanently. It does not keep a backup after a successful
 
 ## Task window
 
-Read opens a table window. Clean and Set date open a smaller window with a progress bar and a collapsible log.
+Read, Clean, and Set date open the task window. It shows the operation log, an Open log button, and an OK button. The operation runs in the background, so the window stays responsive while ExifTool runs.
 
-The progress bar follows the copy, metadata, verify, replace, and finish phases. Read has no progress bar and no log panel.
-
-The log panel shows the raw operation log. It is read-only, selectable, and scrolls to the newest line. The panel keeps the last 5,000 lines. The log file keeps the full run when logging is enabled.
-
-- **Read metadata** shows the metadata table and stays open after it finishes.
-- **Clean metadata** and **Set date** open with the log collapsed. They close 1.5 seconds after success if the log is still collapsed.
-- Expanding the log or clicking Copy log keeps the window open.
-- A failed or cancelled action keeps the window open. Clean and Set date expand the log; Read shows the error in the status line.
-
-The main button says Cancel while the task runs and Close after it finishes. Closing the window during a run cancels the task and restores the original file. Cancel does the same without closing the window.
-
-Copy in Read copies the table as tag/value lines. Copy log in Clean and Set date copies the full log, including lines that are no longer visible in the panel, to the clipboard.
-
-The window follows the Windows light or dark theme when it opens. High contrast uses the system colors.
+- The log is read-only and selectable. It scrolls to the newest line. Use Ctrl+C to copy selected text.
+- The log shows each pipeline step for Clean and Set date. Read shows the formatted metadata output.
+- The window has no progress bar. The log reports the current phase.
+- The window stays open after the operation finishes. OK is enabled when the operation is done. Open log is enabled when ETSU wrote a log file.
+- Closing the window during a run cancels the operation. ETSU waits for the operation to stop before closing.
+- Use Ctrl+plus, Ctrl+minus, or Ctrl+wheel to change the log text size. Ctrl+0 resets it.
+- The window uses a dark theme.
 
 ## Set date
 
-Set date opens a small dialog before the task starts. Pick a date, enter the time as `HH:MM:SS`, and click OK. ETSU applies the value in the local time zone. Cancel closes the dialog without changing the file.
+Set date opens a fixed-size dialog before the task starts. Choose the day, month, year, hour, minute, second, and AM/PM value. The dialog starts at the current local date and time.
 
-ETSU sets the EXIF dates (`DateTimeOriginal`, `CreateDate`, `ModifyDate`) and the filesystem modification and creation times.
+The day list is clamped to the last valid day when you change the month or year. Click OK to apply the value, or click Cancel or press Esc to close the dialog without changing the file.
 
-## Errors
+ETSU sets the EXIF dates (`DateTimeOriginal`, `CreateDate`, `ModifyDate`) and the filesystem modification and creation times. It applies the value in the local time zone.
 
-When Clean or Set date fails, the status line reads Failed. See log. The log shows the failing step and an `[ABORT]` line. If the file was already replaced, the log also shows a `[ROLLBACK]` line and the original is restored. Read shows the error in its status line and has no log panel.
+## Errors and cancellation
 
-Click Copy or Copy log to paste the details into a report. Logs are covered in [Configuration](configuration.md). The copy, verify, and swap steps are covered in [How it works](how-it-works.md).
+When an action fails, the window shows `Failed: ...` and the failing step includes an `[ABORT]` line in the log. The window stays open.
+
+ETSU does not automatically restore the original after a failure. If the failure happens after the replacement step, `<file>.bak` remains next to the original. Inspect both files before you remove or rename either one. See [Troubleshooting](troubleshooting.md).
+
+Closing the window during a run cancels the operation. If cancellation happens before the replacement step, the original file is unchanged. Once replacement starts, ETSU does not roll back. If the replacement step fails, a `.bak` file can remain.
+
+Logs are covered in [Configuration](configuration.md). The copy, verify, and replace steps are covered in [How it works](how-it-works.md).
 
 [Documentation index](index.md)

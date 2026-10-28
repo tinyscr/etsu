@@ -1,10 +1,11 @@
 # Installation
 
-ETSU installs for the current Windows user. The wizard asks for the install location and shows the MIT license. It does not request administrator rights. ETSU is not portable: it writes to AppData and registers an Explorer menu.
+ETSU installs for the current Windows user. The wizard asks for the install location and shows the MIT license. It does not request administrator rights. ETSU is not portable: it writes to the install directory and registers an Explorer menu.
 
 ## Before you install
 
 - 64-bit Windows.
+- .NET Framework 4.5 or later. Current Windows versions include it.
 - ExifTool. ETSU does not bundle it. The installer warns if it cannot find `exiftool.exe`.
 
 ## Install
@@ -12,7 +13,7 @@ ETSU installs for the current Windows user. The wizard asks for the install loca
 Run the installer from `dist\`, for example:
 
 ```bat
-dist\etsu_v0.1.0_installer.exe
+dist\v0.1.0_installer.exe
 ```
 
 The default install directory is `%LOCALAPPDATA%\Programs\ETSU`. You can choose another directory on the wizard's location page.
@@ -20,10 +21,11 @@ The default install directory is `%LOCALAPPDATA%\Programs\ETSU`. You can choose 
 The installer:
 
 1. Copies `etsu.exe` to the install directory.
-2. Creates `%APPDATA%\etsu\.etsu` when the file is missing.
-3. Registers the ETSU submenu for files under `HKCU\Software\Classes\*\shell\etsu`.
-4. Adds an uninstall entry under `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall`.
-5. Checks the configured ExifTool path when one is set; otherwise it looks on PATH and next to the installed `etsu.exe`. It warns when it finds no ExifTool.
+2. Creates `config.ini` in the install directory when the file is missing.
+3. Creates `logs\etsu` and `tmp` in the install directory.
+4. Registers the ETSU submenu for files under `HKCU\Software\Classes\*\shell\etsu`.
+5. Adds an uninstall entry under `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall`.
+6. Checks the configured ExifTool path when one is set; otherwise it looks on PATH and next to the installed `etsu.exe`. It warns when it finds no ExifTool.
 
 The installer does not create a Start menu entry or a desktop shortcut. Start ETSU from the Explorer menu.
 
@@ -44,24 +46,24 @@ HKCU\Software\Classes\*\shell\etsu
   shell\c_date  -> etsu.exe date "%L"
 ```
 
-Read metadata opens a window with the log expanded and stays open. Clean metadata starts without a confirmation prompt. Set date asks for a date and time.
+Read metadata opens the task window with the operation log. Clean metadata starts without a confirmation prompt. Set date opens the date dialog first.
 
 ## Upgrade
 
-Run a newer installer. The installer uses a stable AppId, so the new build updates the existing entry. It creates `%APPDATA%\etsu\.etsu` only when the file is missing, so an existing config stays in place.
+Run a newer installer. The installer uses a stable AppId, so the new build updates the existing entry. It creates `config.ini` only when the file is missing, so an existing config stays in place.
 
 ## Silent install
 
 The installer accepts standard Inno Setup switches. For example:
 
 ```bat
-etsu_v0.1.0_installer.exe /VERYSILENT /DIR="D:\Tools\ETSU"
+v0.1.0_installer.exe /VERYSILENT /DIR="D:\Tools\ETSU"
 ```
 
 ## Uninstall
 
 Uninstall from Settings > Apps, Revo Uninstaller, or `unins000.exe` in the install directory.
 
-The uninstaller removes the ETSU Explorer menu, the files it installed, `%APPDATA%\etsu` and its contents, `%LOCALAPPDATA%\etsu\logs`, and any legacy `%LOCALAPPDATA%\etsu\tmp`. Back up `%APPDATA%\etsu\.etsu` first if you want to keep the configuration. Files you added to the install directory are left in place.
+The uninstaller removes the ETSU Explorer menu, the files it installed, `config.ini`, `logs`, and `tmp` from the install directory. Back up `config.ini` first if you want to keep the configuration. Files you added to the install directory are left in place.
 
 [Documentation index](index.md)

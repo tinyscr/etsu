@@ -1,6 +1,6 @@
 # Configuration
 
-ETSU reads `%APPDATA%\etsu\.etsu`. The installer creates the file from a bundled default when it is missing. The format is INI-like: section and key names are case-insensitive, and lines starting with `#` or `;` are comments. Each action loads the file when it starts, so restart the action after editing it.
+ETSU reads `config.ini` from the install directory. The installer creates the file from a bundled default when it is missing. The format is INI-like: section and key names are case-insensitive, and lines starting with `#` or `;` are comments. Each action loads the file when it starts, so restart the action after editing it.
 
 ## Default file
 
@@ -37,12 +37,15 @@ If the file or a section is missing, ETSU uses the defaults.
 
 | Purpose | Path |
 | --- | --- |
-| Config | `%APPDATA%\etsu\.etsu` |
-| Logs | `%LOCALAPPDATA%\etsu\logs\etsu\` |
-| Temp workspace | Beside the original file (`<original folder>\.etsu_<random>\`) |
+| Config | `<install>\config.ini` |
+| Logs | `<install>\logs\etsu\` |
+| App temp directory | `<install>\tmp\` |
+| Operation workspace | Beside the original file (`<original folder>\.etsu_<random>\`) |
 | Default install directory | `%LOCALAPPDATA%\Programs\ETSU` |
 
-The uninstaller removes `%APPDATA%\etsu`, `%LOCALAPPDATA%\etsu\logs`, and any legacy `%LOCALAPPDATA%\etsu\tmp`. Back up `.etsu` before uninstalling if you want to keep it.
+ETSU creates the log and temp directories at startup and checks that the temp directory is writable. The operation workspace is separate from the app temp directory because the replacement step needs the workspace and the original file on the same volume.
+
+The uninstaller removes `config.ini`, `logs`, and `tmp` from the install directory. Back up `config.ini` before uninstalling if you want to keep it.
 
 ## Logs
 
@@ -50,15 +53,17 @@ ETSU writes log files as `<action>_<YYYYMMDD>_<HHMMSS>.log` in the log directory
 
 - `read` writes a log when logging is enabled.
 - `clean` and `date` write a log after success, failure, or cancellation.
-- Clean logs list the tags reported as deleted. Read logs contain the raw ExifTool output.
-- Clean and date logs include the detected ExifTool version and path.
+- Clean logs list the tags reported as deleted. Read logs contain the formatted ExifTool output.
+- Clean and date logs include the detected ExifTool version.
 - `logCount` cleanup runs after each new log is written.
 
-The log panel in the task window shows the last 5,000 lines. The log file keeps the full run.
+The task window shows the reporter lines for the current action and adds a final `Failed: ...` or `Cancelled.` line when needed. The log file contains the reporter lines when logging is enabled.
 
 ## Temp files
 
-Clean and Set date create a temporary directory beside the original file, copy into it, and remove it when the run ends. Keeping the copy on the same volume lets the swap use a rename. The `.bak` file used during the swap is also created next to the original file.
+Clean and Set date create a temporary directory beside the original file, copy into it, and remove it when the run ends. Keeping the copy on the same volume keeps the replacement on one volume. The `.bak` file used during replacement is also created next to the original file.
+
+A successful run deletes the `.bak` file. ETSU does not automatically restore the original if a later step fails, so a failed replacement can leave a `.bak` file behind. See [Troubleshooting](troubleshooting.md).
 
 ## ExifTool
 
@@ -68,6 +73,6 @@ ETSU does not bundle ExifTool. Install it from [exiftool.org](https://exiftool.o
 2. Put `exiftool.exe` on PATH.
 3. Put `exiftool.exe` next to `etsu.exe`.
 
-ETSU uses `exiftoolPATH` when it is not `null`. If that path does not exist, ETSU shows an error and does not fall back to PATH. Clean and date logs show the detected ExifTool version and path.
+ETSU uses `exiftoolPATH` when it is not `null`. If that path does not exist, ETSU shows an error and does not fall back to PATH. Clean and date logs show the detected ExifTool version.
 
 [Documentation index](index.md)

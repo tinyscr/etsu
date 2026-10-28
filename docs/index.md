@@ -7,17 +7,18 @@ ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates
 | Guide | Contents |
 | --- | --- |
 | [Installation](installation.md) | Install, upgrade, silent install, and uninstall. |
-| [Usage](usage.md) | Explorer menu, progress window, log panel, date dialog, and auto-close. |
+| [Usage](usage.md) | Explorer menu, task window, log, and date dialog. |
 | [Configuration](configuration.md) | Config keys, logs, temp files, and ExifTool lookup. |
-| [How it works](how-it-works.md) | GUI reporter, read, clean, date, copy, verify, swap, and rollback. |
+| [How it works](how-it-works.md) | Read, clean, date, copy, verify, and replace. |
 | [Troubleshooting](troubleshooting.md) | Common errors, limitations, and recovery notes. |
-| [Development](development.md) | Build, source layout, installer, icon, and release workflow. |
+| [Development](development.md) | Build, tests, source layout, installer, and release workflow. |
 
 ## Requirements
 
 - 64-bit Windows.
-- [ExifTool](https://exiftool.org/), either on PATH, next to `etsu.exe`, or at a path set in `%APPDATA%\etsu\.etsu`.
-- Go 1.27 or newer and Inno Setup 6 only for building from source.
+- [ExifTool](https://exiftool.org/), either on PATH, next to `etsu.exe`, or at a path set in `config.ini`.
+- .NET Framework 4.5 or later.
+- Inno Setup 6 only when building from source.
 
 ETSU installs for the current user. It does not need administrator rights and is not a portable app.
 

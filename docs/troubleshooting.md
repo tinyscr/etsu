@@ -4,7 +4,7 @@
 
 Open a terminal and run `exiftool -ver`. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` next to `etsu.exe`.
 
-If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `%APPDATA%\etsu\.etsu`.
+If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `<install>\config.ini`. The default location is `%LOCALAPPDATA%\Programs\ETSU\config.ini`.
 
 If you just changed PATH, restart Explorer or sign out and back in so new actions see the new value.
 
@@ -22,9 +22,9 @@ HKCU\Software\Classes\*\shell\etsu
 
 ## Clean or Set date stops with a backup already exists error
 
-ETSU refuses to overwrite an existing `<file>.bak`. Inspect both files before you remove anything. If the original is intact, rename or delete the `.bak`. If the `.bak` is the only good copy, restore it by renaming it back to the original name.
+ETSU refuses to overwrite an existing `<file>.bak`. It does not automatically restore the original. Inspect both files before you remove anything. If the original is intact, rename or delete the `.bak`. If the `.bak` is the only good copy, restore it by renaming it back to the original name.
 
-A crash during a swap can leave a `.bak` file. Do not delete it until you know which file is good.
+A crash during replacement can leave a `.bak` file. Do not delete it until you know which file is good.
 
 ## Clean changed the file dates
 
@@ -32,25 +32,27 @@ ETSU cleans a temp copy and replaces the original with it. The final file has th
 
 Run Set date after cleaning if you need a specific timestamp. Record the original timestamps first if you need to restore them.
 
-## The date dialog rejects my time
+## The date dialog does not accept a typed time
 
-Enter the time as `HH:MM:SS`, for example `22:47:52`. The date comes from the date picker. ETSU parses both in the local time zone. An invalid time shows a warning and keeps the dialog open. Cancel closes the dialog without changing the file.
+The date dialog uses lists for the day, month, year, hour, minute, second, and AM/PM value. Pick the values instead of typing a time string. The dialog clamps the day to the last valid day when you change the month or year. Click OK to apply the value, or click Cancel or press Esc to close without changing the file.
 
-## The window closes too quickly
+## The window stays open
 
-Clean and Set date close 1.5 seconds after success when the log is collapsed. Click Show log while the task runs to keep the window open. Read always stays open.
+The task window does not close automatically. Click OK after the operation finishes. Closing it during a run cancels the operation.
 
-If the window has already closed, open the log file. See [Configuration](configuration.md) for the log directory and settings.
+If you need the log later, click Open log. Read logging is off by default, so enable it in `config.ini` if you want a log file for Read. See [Configuration](configuration.md) for the log directory and settings.
 
 ## An action failed
 
-The status line reads Failed. See log. The window stays open and expands the log. The failing step is followed by an `[ABORT]` line. If the original was already replaced, a `[ROLLBACK]` line follows and the original is restored.
+The window shows `Failed: ...` and the failing step includes an `[ABORT]` line in the log. The window stays open.
 
-Click Copy log to copy the details. The log file has the same content when logging is enabled.
+ETSU does not automatically restore the original. If the failure happened before the replacement step, the original file is unchanged. If it happened after the replacement, `<file>.bak` may remain. Inspect both files before you remove or rename either one.
 
 ## I cancelled an action
 
-Click Cancel while the task runs to stop it and keep the window open. The log shows `[CANCELLED]` and, if needed, `[ROLLBACK]`. Closing the window with the X during a run does the same, then closes the window after the rollback.
+Closing the window during a run cancels the operation. The window shows `Cancelled.`
+
+If cancellation happens before the replacement step, the original file is unchanged. Once replacement starts, ETSU does not roll back. A failed replacement can leave a `.bak` file.
 
 ## The installer is unsigned
 
@@ -58,19 +60,19 @@ The current build is not code-signed. Windows SmartScreen may warn. GitHub relea
 
 ## Uninstall leaves files
 
-The uninstaller removes the Explorer menu, installed files, `%APPDATA%\etsu`, `%LOCALAPPDATA%\etsu\logs`, and any legacy `%LOCALAPPDATA%\etsu\tmp`. Files you added to the install directory are left in place. Remove them manually if you do not need them.
+The uninstaller removes the Explorer menu, installed files, `config.ini`, `logs`, and `tmp` from the install directory. Files you added to the install directory are left in place. Remove them manually if you do not need them.
 
-Uninstall removes `%APPDATA%\etsu` and its contents, including `.etsu`. Back it up first if you want to keep the configuration.
+Uninstall removes `config.ini` from the install directory. Back it up first if you want to keep the configuration.
 
 ## Known limitations
 
-- ETSU has no command-line interface yet. It runs from the Explorer menu only.
+- ETSU has no general command-line interface. It runs from the Explorer menu.
 - The Explorer menu is single-file.
-- Read shows a tag/value table, not a categorized summary.
+- Read shows a tag/value text view, not a categorized summary.
 - ExifTool is not bundled.
 - Clean does not keep the original timestamps.
 - The Explorer menu is for files, not folders.
 - Each action opens its own window. ETSU does not prevent two windows from working on the same file.
-- Clean and Set date close after success when the log is collapsed.
+- ETSU does not keep an automatic rollback copy after a successful run.
 
 [Documentation index](index.md)

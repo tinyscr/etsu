@@ -4,15 +4,15 @@ ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). 
 
 ## Install
 
-Run the installer in `dist\`, for example `dist\etsu_v0.1.0_installer.exe`. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
+Run the installer in `dist\`, for example `dist\v0.1.0_installer.exe`. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
-The installer copies `etsu.exe`, creates `%APPDATA%\etsu\.etsu` when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool.
+The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool.
 
 ## Use
 
 Right-click a file, open the ETSU submenu, and choose Read metadata, Clean metadata, or Set date. On Windows 11, the submenu is under Show more options.
 
-Read opens a metadata table and stays open. Clean and Set date open a smaller window with a progress bar and a collapsible log; they close 1.5 seconds after success when the log is collapsed. Errors keep the window open. The window follows the Windows light or dark theme. See [Usage](docs/usage.md).
+Read shows the ExifTool output as a tag/value text view. Clean and Set date show the operation log in the same window. The window stays open until you click OK. Closing it during a run cancels the operation. See [Usage](docs/usage.md).
 
 ## Documentation
 
@@ -26,17 +26,23 @@ Read opens a metadata table and stays open. Clean and Set date open a smaller wi
 
 ## Build
 
-```bat
-build.bat
+```powershell
+.\build.ps1
 ```
 
-Builds `dist\etsu_v0.1.0_installer.exe`. Pass a version to override the default:
+Builds `dist\v0.1.0_installer.exe` and `dist\SHA256SUMS.txt`. Pass a version to override the default:
 
-```bat
-build.bat 0.2.0
+```powershell
+.\build.ps1 0.2.0
 ```
 
-Go 1.27+ and Inno Setup 6 are required. See [Development](docs/development.md) for the source layout, icon resource, and release workflow.
+Run the regression suite with:
+
+```powershell
+.\test.ps1
+```
+
+To build, install .NET Framework 4.5 or later and Inno Setup 6. See [Development](docs/development.md) for the source layout, build steps, and release workflow.
 
 ## License
 
