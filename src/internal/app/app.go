@@ -25,7 +25,6 @@ var (
 )
 
 func Init() error {
-	initConsole()
 	if exe, err := os.Executable(); err == nil {
 		BaseDir = filepath.Dir(exe)
 	}

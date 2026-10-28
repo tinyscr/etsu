@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"strings"
-	"time"
 
 	"github.com/tinyscr/etsu/internal/app"
 	"github.com/tinyscr/etsu/internal/ops"
+	"github.com/tinyscr/etsu/internal/ui"
 )
 
 func main() {
@@ -18,27 +17,29 @@ func main() {
 }
 
 func run(args []string) int {
+	ui.Init()
+
 	if err := app.Init(); err != nil {
-		app.WriteLine(err.Error(), app.Red)
-		app.WaitExit()
+		ui.WriteLine(err.Error(), ui.Red)
+		ui.WaitExit()
 		return 1
 	}
 
 	action, file, ok := parseArgs(args)
 	if !ok {
-		app.WriteLine("Usage: etsu read|clean|date <file>", app.DarkGray)
-		app.WriteLine("ETSU normally runs from the Explorer context menu.", app.DarkGray)
-		app.WaitExit()
+		ui.WriteLine("Usage: etsu read|clean|date <file>", ui.DarkGray)
+		ui.WriteLine("ETSU normally runs from the Explorer context menu.", ui.DarkGray)
+		ui.WaitExit()
 		return 2
 	}
 
 	if err := app.FindExifTool(); err != nil {
-		app.WriteLine(err.Error(), app.Red)
-		app.WaitExit()
+		ui.WriteLine(err.Error(), ui.Red)
+		ui.WaitExit()
 		return 1
 	}
 
-	rep := &app.ConsoleReporter{}
+	rep := &ui.Reporter{AppVersion: app.Version, ExifVersion: app.ExifVersion}
 	rep.Header(action, file)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -52,9 +53,9 @@ func run(args []string) int {
 	case "clean":
 		err = ops.Clean(ctx, file, rep)
 	case "date":
-		when, ok := promptDate()
+		when, ok := ui.PromptDate()
 		if !ok {
-			app.WaitExit()
+			ui.WaitExit()
 			return 0
 		}
 		err = ops.Date(ctx, file, when, rep)
@@ -64,33 +65,17 @@ func run(args []string) int {
 
 	switch {
 	case err == nil:
-		app.WaitExit()
+		ui.WaitExit()
 		return 0
 	case errors.Is(err, context.Canceled):
-		app.WriteLine("Cancelled.", app.Yellow)
-		app.WaitExit()
+		ui.WriteLine("Cancelled.", ui.Yellow)
+		ui.WaitExit()
 		return 1
 	default:
-		app.WriteLine("Failed: "+err.Error(), app.Red)
-		app.WaitExit()
+		ui.WriteLine("Failed: "+err.Error(), ui.Red)
+		ui.WaitExit()
 		return 1
 	}
-}
-
-func promptDate() (time.Time, bool) {
-	fmt.Print("  Enter date (DD-MM-YYYY HH:MM:SS): ")
-	line := app.ReadLine()
-	if line == "" {
-		app.WriteLine("No date entered.", app.DarkGray)
-		return time.Time{}, false
-	}
-
-	dt, err := time.ParseInLocation("02-01-2006 15:04:05", line, time.Local)
-	if err != nil {
-		app.WriteLine("[ABORT] Invalid date. Expected format: DD-MM-YYYY HH:MM:SS", app.Red)
-		return time.Time{}, false
-	}
-	return dt, true
 }
 
 func parseArgs(args []string) (action, file string, ok bool) {

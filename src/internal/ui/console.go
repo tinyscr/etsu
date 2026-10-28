@@ -1,4 +1,4 @@
-package app
+package ui
 
 import (
 	"bufio"
@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"golang.org/x/sys/windows"
@@ -22,7 +23,7 @@ const ruleWidth = 54
 
 var rule = strings.Repeat("━", ruleWidth)
 
-func initConsole() {
+func Init() {
 	_ = windows.SetConsoleOutputCP(65001)
 
 	h := windows.Handle(os.Stdout.Fd())
@@ -70,9 +71,25 @@ func WriteLine(text string, color ...Color) {
 	}
 }
 
-func ReadLine() string {
+func readLine() string {
 	line, _ := stdin.ReadString('\n')
 	return strings.TrimSpace(line)
+}
+
+func PromptDate() (time.Time, bool) {
+	fmt.Print("  Enter date (DD-MM-YYYY HH:MM:SS): ")
+	line := readLine()
+	if line == "" {
+		WriteLine("No date entered.", DarkGray)
+		return time.Time{}, false
+	}
+
+	dt, err := time.ParseInLocation("02-01-2006 15:04:05", line, time.Local)
+	if err != nil {
+		WriteLine("[ABORT] Invalid date. Expected format: DD-MM-YYYY HH:MM:SS", Red)
+		return time.Time{}, false
+	}
+	return dt, true
 }
 
 func WaitExit() {
@@ -82,19 +99,21 @@ func WaitExit() {
 	_, _ = stdin.ReadString('\n')
 }
 
-// ConsoleReporter streams the operation log to the console and keeps the full
-// run for the optional log file.
-type ConsoleReporter struct {
-	Lines []string
+// Reporter streams the operation log to the console and keeps the full run
+// for the optional log file.
+type Reporter struct {
+	Lines       []string
+	AppVersion  string
+	ExifVersion string
 }
 
-func (r *ConsoleReporter) Header(operation, file string) {
+func (r *Reporter) Header(operation, file string) {
 	lines := []string{
 		"┏┓  ┏┳┓  ┏┓  ┳┳",
 		"┣    ┃   ┗┓  ┃┃",
 		"┗┛   ┻   ┗┛  ┗┛",
 		rule,
-		" App: " + Version + " | Exiftool: " + ExifVersion + " | Operation: " + operation,
+		" App: " + r.AppVersion + " | Exiftool: " + r.ExifVersion + " | Operation: " + operation,
 		"",
 		" File(s): " + file,
 		rule,
@@ -105,9 +124,9 @@ func (r *ConsoleReporter) Header(operation, file string) {
 	}
 }
 
-func (r *ConsoleReporter) Progress(int, string) {}
+func (r *Reporter) Progress(int, string) {}
 
-func (r *ConsoleReporter) Log(line string) {
+func (r *Reporter) Log(line string) {
 	m := stepLine.FindStringSubmatch(line)
 	if m == nil {
 		r.write(line)
@@ -127,12 +146,12 @@ func (r *ConsoleReporter) Log(line string) {
 	r.write(strings.Repeat("━", width))
 }
 
-func (r *ConsoleReporter) write(line string) {
+func (r *Reporter) write(line string) {
 	r.Lines = append(r.Lines, line)
 	fmt.Println(line)
 }
 
-func (r *ConsoleReporter) blank(n int) {
+func (r *Reporter) blank(n int) {
 	for range n {
 		r.write("")
 	}
