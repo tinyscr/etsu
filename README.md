@@ -4,7 +4,7 @@ ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). 
 
 ## Install
 
-Run the installer in `dist\`, for example `dist\v0.2.0_installer.exe`. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
+Run `dist\v0.2.0_installer_x64.exe` on 64-bit Windows or `dist\v0.2.0_installer_x86.exe` on 32-bit Windows. Both install the same app; install one. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
 The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool. Uninstall from Settings > Apps.
 
@@ -20,13 +20,16 @@ See [docs](docs/README.md) for usage, configuration, internals, troubleshooting,
 
 ## Build
 
-`build.ps1` reads the root `version` file and builds `dist\v<version>_installer.exe` and `dist\SHA256SUMS.txt`.
+`build.ps1` reads the root `version` file and builds one installer. The default architecture is x64.
 
 ```powershell
-.\build.ps1
+.\build.ps1 -Architecture x64
+.\build.ps1 -Architecture x86
 ```
 
-To release, bump `version`, commit, and push to `main`. The release workflow creates the tag and a draft release.
+It writes `dist\v<version>_installer_x64.exe` or `dist\v<version>_installer_x86.exe` and the matching `dist\SHA256SUMS_x64.txt` or `dist\SHA256SUMS_x86.txt`.
+
+To release, bump `version`, commit, and push to `main`. The release workflow builds both installers and creates the tag and a draft release.
 
 Run the regression suite with:
 
