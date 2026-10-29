@@ -4,15 +4,15 @@ ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). 
 
 ## Install
 
-Run `dist\v0.2.0_installer_x64.exe` on 64-bit Windows or `dist\v0.2.0_installer_x86.exe` on 32-bit Windows. Both install the same app; install one. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
+Run `dist\v0.2.0_installer_x64.exe` on 64-bit Windows or `dist\v0.2.0_installer_x86.exe` on 32-bit Windows. Both install the same app; install one. The installer uses a dark wizard, shows the MIT license, and checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool before installing. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
-The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool. Uninstall from Settings > Apps.
+The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and lets you continue if ExifTool is missing. Uninstall from Settings > Apps.
 
 ## Use
 
-Right-click a file, open the ETSU submenu, and choose Read metadata, Clean metadata, or Set date. On Windows 11, the submenu is under Show more options.
+Select one or more files, right-click, open the ETSU submenu, and choose Read metadata, Clean metadata, or Set date. On Windows 11, the submenu is under Show more options. Read works on one file; Clean and Set date work on the whole selection.
 
-Read shows the ExifTool output as a tag/value text view. Clean and Set date show the operation log in the same window. The window stays open until you click OK. Closing it during a run cancels the operation. See [Usage](docs/usage.md).
+Read shows the ExifTool output as a tag/value text view. Clean and Set date show one five-stage batch summary; the log file keeps the detailed per-file pipeline and ExifTool output. The window stays open until you click OK. Closing it during a run cancels the operation. See [Usage](docs/usage.md).
 
 ## Documentation
 

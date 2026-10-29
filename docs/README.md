@@ -1,6 +1,6 @@
 # ETSU documentation
 
-ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates and filesystem timestamps for one file. It runs from the Explorer context menu, calls ExifTool for the metadata work, and does not bundle it.
+ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates and filesystem timestamps. Read works on one file; Clean and Set date work on one or more selected files. It runs from the Explorer context menu, calls ExifTool for the metadata work, and does not bundle it.
 
 ## Guides
 
@@ -19,6 +19,6 @@ ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates
 - .NET Framework 4.5 or later.
 - Inno Setup 6 only when building from source.
 
-ETSU installs for the current user. It does not need administrator rights and is not a portable app.
+ETSU installs for the current user. It does not need administrator rights and is not a portable app. The installer checks .NET Framework 4.5 before installing and warns if ExifTool is missing.
 
 Install and build commands are in the top-level [README](../README.md).

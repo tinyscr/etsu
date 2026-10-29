@@ -46,7 +46,7 @@ The build script looks for `ISCC.exe` in `%LOCALAPPDATA%\Programs\Inno Setup 6`,
 .\test.ps1
 ```
 
-`test.ps1` compiles the app sources and the regression tests into `bin\tests\etsu-tests.exe`, then runs them. The suite covers path handling, command-line parsing, config parsing, date input, log formatting, read formatting, and the copy, verify, and replace pipeline.
+`test.ps1` compiles the app sources and the regression tests into `bin\tests\etsu-tests.exe`, then runs them. The suite covers path handling, command-line parsing (including batch arguments), operation guards, config parsing, date input, log formatting, read formatting, the copy, verify, and replace pipeline, and the batch stage and raw-log split.
 
 ## Source layout
 
@@ -79,7 +79,7 @@ etsu/
     release.yml
 ```
 
-- `src\App`: entry point, paths, config access, ExifTool lookup, process execution, file copy, hashing, and log helpers.
+- `src\App`: entry point, paths, batch collection, config access, ExifTool lookup, process execution, file copy, hashing, and log helpers.
 - `src\Ops`: read, clean, date, and the shared copy, verify, and replace pipeline.
 - `src\Ui`: task window, date dialog, dark controls, and theme helpers.
 - `src\Assets`: app icon and manifest. The manifest declares Common Controls 6.0, PerMonitorV2 DPI awareness, and `asInvoker`.
@@ -93,6 +93,8 @@ Build outputs are `bin\etsu.exe`, `obj\Version.g.cs`, `bin\tests\etsu-tests.exe`
 ## Installer
 
 `src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. `build.ps1` passes the version and architecture. A direct Inno compile without `AppVersion` or `AppArchitecture` fails. The x64 installer uses `x64compatible` and 64-bit install mode; the x86 installer uses `x86compatible`. Both use the same AppId, so only one architecture is installed at a time. The installer seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, and `tmp`.
+
+The wizard is forced dark with `WizardStyle=modern dark includetitlebar` and uses `LICENSE.rtf` for the centered license heading. Before copying files, `PrepareToInstall` checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool (warns and lets you continue). The checks run on an output progress page.
 
 ## Icon and manifest resources
 

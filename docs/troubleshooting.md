@@ -8,13 +8,13 @@ If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall b
 
 If you just changed PATH, restart Explorer or sign out and back in so new actions see the new value.
 
-The installer warns at the end when it cannot find ExifTool.
+The installer checks for ExifTool before installing and lets you continue without it.
 
 ## The Explorer menu is missing
 
 On Windows 11, open Show more options. The menu is under ETSU.
 
-The menu is registered for files, not folders, and for one selected file at a time. If the menu is still missing, reinstall ETSU. The registry key is under the current user:
+The menu is registered for files, not folders. Read is available for one selected file; Clean and Set date are available for multiple selected files. If the menu is still missing, reinstall ETSU. The registry key is under the current user:
 
 ```text
 HKCU\Software\Classes\*\shell\etsu
@@ -34,7 +34,7 @@ Run Set date after cleaning if you need a specific timestamp. Record the origina
 
 ## The date dialog does not accept a typed time
 
-The date dialog uses lists for the day, month, year, hour, minute, second, and AM/PM value. Pick the values instead of typing a time string. The dialog clamps the day to the last valid day when you change the month or year. Click OK to apply the value, or click Cancel or press Esc to close without changing the file.
+The date dialog uses lists for the day, month, year, hour, minute, second, and AM/PM value. Pick the values instead of typing a time string. The dialog clamps the day to the last valid day when you change the month or year. Click OK to apply the value, or click Cancel or press Esc to close without changing any file.
 
 ## The window stays open
 
@@ -42,15 +42,15 @@ The task window does not close automatically. Click OK after the operation finis
 
 If you need the log later, click Open log. Read logging is off by default, so enable it in `config.ini` if you want a log file for Read. See [Configuration](configuration.md) for the log directory and settings.
 
-## An action failed
+## A file failed in a batch
 
-The window shows `Failed: ...` and the failing step includes an `[ABORT]` line in the log. The window stays open.
+The window shows a `[FAILED]` line under the current stage, and the batch skips that file in later stages while the other files continue. The log file includes the `[ABORT]` detail and ExifTool output. The final summary reports how many files succeeded and how many failed. The window stays open. An error that stops the whole action shows `Failed: ...`.
 
 ETSU does not automatically restore the original. If the failure happened before the replacement step, the original file is unchanged. If it happened after the replacement, `<file>.bak` may remain. Inspect both files before you remove or rename either one.
 
 ## I cancelled an action
 
-Closing the window during a run cancels the operation. The window shows `Cancelled.`
+Closing the window during a run cancels the operation. The window shows `Cancelled.` A cancelled batch does not start the remaining files or stages.
 
 If cancellation happens before the replacement step, the original file is unchanged. Once replacement starts, ETSU does not roll back. A failed replacement can leave a `.bak` file.
 
@@ -66,13 +66,13 @@ Uninstall removes `config.ini` from the install directory. Back it up first if y
 
 ## Known limitations
 
-- ETSU has no general command-line interface. It runs from the Explorer menu.
-- The Explorer menu is single-file.
+- The command line is limited to the internal `read|clean|date` actions; there is no file picker.
+- Read is single-file. Clean and Set date accept multiple selected files.
 - Read shows a tag/value text view, not a categorized summary.
 - ExifTool is not bundled.
 - Clean does not keep the original timestamps.
 - The Explorer menu is for files, not folders.
-- Each action opens its own window. ETSU does not prevent two windows from working on the same file.
+- Separate actions or batches can open separate windows. ETSU does not prevent two windows from working on the same file.
 - ETSU does not keep an automatic rollback copy after a successful run.
 
 [Documentation](README.md)
