@@ -36,6 +36,25 @@ function Find-Csc {
     Fail "csc.exe was not found. Install .NET Framework 4.5 or later."
 }
 
+function Get-PeMachine([string]$Path) {
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $reader = New-Object -TypeName System.IO.BinaryReader -ArgumentList $stream
+        if ($reader.ReadUInt16() -ne 0x5A4D) {
+            Fail "Not a PE file: $Path"
+        }
+        $stream.Position = 0x3C
+        $peOffset = $reader.ReadUInt32()
+        $stream.Position = $peOffset
+        if ($reader.ReadUInt32() -ne 0x00004550) {
+            Fail "Not a PE file: $Path"
+        }
+        return $reader.ReadUInt16()
+    } finally {
+        $stream.Dispose()
+    }
+}
+
 function Find-Iscc {
     $candidates = @()
     if ($env:LOCALAPPDATA) {
@@ -127,10 +146,11 @@ if ($LASTEXITCODE -ne 0) {
 if (-not (Test-Path -LiteralPath $exe)) {
     Fail "Build did not produce $exe."
 }
-$expectedArchitecture = if ($Architecture -eq "x64") { "Amd64" } else { "X86" }
-$actualArchitecture = [System.Reflection.AssemblyName]::GetAssemblyName($exe).ProcessorArchitecture.ToString()
-if ($actualArchitecture -ne $expectedArchitecture) {
-    Fail "Build produced $actualArchitecture instead of $expectedArchitecture."
+# AssemblyName.ProcessorArchitecture is None under PowerShell 7, so read the PE header.
+$expectedMachine = if ($Architecture -eq "x64") { 0x8664 } else { 0x014c }
+$actualMachine = Get-PeMachine $exe
+if ($actualMachine -ne $expectedMachine) {
+    Fail ("Build produced PE machine 0x{0:X4} instead of 0x{1:X4}." -f $actualMachine, $expectedMachine)
 }
 
 if (-not $NoInstaller) {
