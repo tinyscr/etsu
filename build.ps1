@@ -135,7 +135,8 @@ if ($actualArchitecture -ne $expectedArchitecture) {
 
 if (-not $NoInstaller) {
     Write-Host "Building installer..."
-    & $iscc "/DAppVersion=$Version" "/DAppArchitecture=$Architecture" $iss
+    $archDefine = if ($Architecture -eq "x64") { "/DArchX64" } else { "/DArchX86" }
+    & $iscc "/DAppVersion=$Version" "/DAppArchitecture=$Architecture" $archDefine $iss
     if ($LASTEXITCODE -ne 0) {
         Fail "Inno Setup failed with exit code $LASTEXITCODE."
     }

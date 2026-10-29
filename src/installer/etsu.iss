@@ -31,13 +31,13 @@ OutputBaseFilename=v{#AppVersion}_installer_{#AppArchitecture}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-#if AppArchitecture == "x64"
+#ifdef ArchX64
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-#elif AppArchitecture == "x86"
+#elif defined(ArchX86)
 ArchitecturesAllowed=x86compatible
 #else
-#error AppArchitecture must be x64 or x86.
+#error Pass /DArchX64 or /DArchX86.
 #endif
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\{#AppExeName}
