@@ -1,5 +1,7 @@
 [CmdletBinding()]
 param(
+    [ValidateSet("x64", "x86")]
+    [string]$Architecture = "x64",
     [switch]$NoInstaller
 )
 
@@ -62,6 +64,7 @@ $Version = $Version.Trim()
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     Fail "version must contain three numeric parts, for example 0.2.0."
 }
+$Architecture = $Architecture.ToLowerInvariant()
 
 $csc = Find-Csc
 $iscc = $null
@@ -103,7 +106,7 @@ Remove-Item -LiteralPath $exe -Force -ErrorAction SilentlyContinue
 $compilerArgs = @(
     "/nologo",
     "/target:winexe",
-    "/platform:anycpu",
+    "/platform:$Architecture",
     "/optimize+",
     "/codepage:65001",
     "/win32icon:$icon",
@@ -124,19 +127,24 @@ if ($LASTEXITCODE -ne 0) {
 if (-not (Test-Path -LiteralPath $exe)) {
     Fail "Build did not produce $exe."
 }
+$expectedArchitecture = if ($Architecture -eq "x64") { "Amd64" } else { "X86" }
+$actualArchitecture = [System.Reflection.AssemblyName]::GetAssemblyName($exe).ProcessorArchitecture.ToString()
+if ($actualArchitecture -ne $expectedArchitecture) {
+    Fail "Build produced $actualArchitecture instead of $expectedArchitecture."
+}
 
 if (-not $NoInstaller) {
     Write-Host "Building installer..."
-    & $iscc "/DAppVersion=$Version" $iss
+    & $iscc "/DAppVersion=$Version" "/DAppArchitecture=$Architecture" $iss
     if ($LASTEXITCODE -ne 0) {
         Fail "Inno Setup failed with exit code $LASTEXITCODE."
     }
-    $installer = Join-Path $dist "v${Version}_installer.exe"
+    $installer = Join-Path $dist "v${Version}_installer_${Architecture}.exe"
     if (-not (Test-Path -LiteralPath $installer)) {
         Fail "Installer build did not produce $installer."
     }
 
-    $checksumFile = Join-Path $dist "SHA256SUMS.txt"
+    $checksumFile = Join-Path $dist "SHA256SUMS_$Architecture.txt"
     $checksum = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
     "$checksum  $([System.IO.Path]::GetFileName($installer))" |
         Set-Content -LiteralPath $checksumFile -Encoding ascii

@@ -2,6 +2,9 @@
 #ifndef AppVersion
 #error AppVersion is required. Build with build.ps1.
 #endif
+#ifndef AppArchitecture
+#error AppArchitecture is required. Build with build.ps1.
+#endif
 #define AppPublisher "TinyScripts"
 #define AppURL "https://github.com/tinyscr/etsu"
 #define AppExeName "etsu.exe"
@@ -24,12 +27,18 @@ DisableDirPage=no
 LicenseFile=..\..\LICENSE
 PrivilegesRequired=lowest
 OutputDir=..\..\dist
-OutputBaseFilename=v{#AppVersion}_installer
+OutputBaseFilename=v{#AppVersion}_installer_{#AppArchitecture}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+#if AppArchitecture == "x64"
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#elif AppArchitecture == "x86"
+ArchitecturesAllowed=x86compatible
+#else
+#error AppArchitecture must be x64 or x86.
+#endif
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoVersion={#AppVersion}.0
