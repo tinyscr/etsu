@@ -1,6 +1,6 @@
 #define AppName "ETSU"
 #ifndef AppVersion
-#define AppVersion "0.1.0"
+#error AppVersion is required. Build with build.ps1.
 #endif
 #define AppPublisher "TinyScripts"
 #define AppURL "https://github.com/tinyscr/etsu"

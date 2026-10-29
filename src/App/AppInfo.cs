@@ -9,6 +9,18 @@ namespace Etsu.App
         {
             get
             {
+                object[] attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(
+                    typeof(AssemblyInformationalVersionAttribute), false);
+                if (attributes.Length > 0)
+                {
+                    AssemblyInformationalVersionAttribute informational =
+                        attributes[0] as AssemblyInformationalVersionAttribute;
+                    if (informational != null && !string.IsNullOrEmpty(informational.InformationalVersion))
+                    {
+                        return informational.InformationalVersion;
+                    }
+                }
+
                 Version version = Assembly.GetExecutingAssembly().GetName().Version;
                 if (version == null)
                 {

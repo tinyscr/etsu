@@ -1,6 +1,5 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "0.1.0",
     [switch]$NoInstaller
 )
 
@@ -8,6 +7,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $root = $PSScriptRoot
+$versionPath = Join-Path $root "version"
 $src = Join-Path $root "src"
 $bin = Join-Path $root "bin"
 $obj = Join-Path $root "obj"
@@ -54,11 +54,13 @@ function Find-Iscc {
     Fail "Inno Setup 6 not found. Install it with: winget install JRSoftware.InnoSetup --scope user"
 }
 
-if ($Version.StartsWith("v", [StringComparison]::OrdinalIgnoreCase)) {
-    $Version = $Version.Substring(1)
+if (-not (Test-Path -LiteralPath $versionPath)) {
+    Fail "version file not found: $versionPath"
 }
+$Version = [string](Get-Content -LiteralPath $versionPath -Raw)
+$Version = $Version.Trim()
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
-    Fail "Version must have three numeric parts, for example 0.1.0."
+    Fail "version must contain three numeric parts, for example 0.2.0."
 }
 
 $csc = Find-Csc

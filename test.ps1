@@ -5,9 +5,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $root = $PSScriptRoot
+$versionPath = Join-Path $root "version"
 $src = Join-Path $root "src"
 $tests = Join-Path $root "tests"
 $bin = Join-Path $root "bin"
+$obj = Join-Path $root "obj"
 $testDir = Join-Path $bin "tests"
 $testExe = Join-Path $testDir "etsu-tests.exe"
 
@@ -28,8 +30,17 @@ function Find-Csc {
     Fail "csc.exe was not found. Install .NET Framework 4.5 or later."
 }
 
+if (-not (Test-Path -LiteralPath $versionPath)) {
+    Fail "version file not found: $versionPath"
+}
+$Version = [string](Get-Content -LiteralPath $versionPath -Raw)
+$Version = $Version.Trim()
+if ($Version -notmatch '^\d+\.\d+\.\d+$') {
+    Fail "version must contain three numeric parts, for example 0.2.0."
+}
+
 $csc = Find-Csc
-foreach ($path in @($bin, $testDir)) {
+foreach ($path in @($bin, $obj, $testDir)) {
     New-Item -ItemType Directory -Force -Path $path | Out-Null
 }
 
@@ -46,6 +57,17 @@ $sources += @(
 if ($sources.Count -eq 0) {
     Fail "No C# sources found under src or tests."
 }
+
+$versionFile = Join-Path $obj "Version.g.cs"
+$versionText = @"
+using System.Reflection;
+
+[assembly: AssemblyVersion("$Version.0")]
+[assembly: AssemblyFileVersion("$Version.0")]
+[assembly: AssemblyInformationalVersion("$Version")]
+"@
+[System.IO.File]::WriteAllText($versionFile, $versionText, (New-Object System.Text.UTF8Encoding($false)))
+$sources += $versionFile
 
 Remove-Item -LiteralPath $testExe -Force -ErrorAction SilentlyContinue
 
