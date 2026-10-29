@@ -38,7 +38,7 @@ namespace Etsu.Ui
 
         public DateDialog()
         {
-            Text = "ETSU — Set date";
+            Text = "Select date";
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = false;

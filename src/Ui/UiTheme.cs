@@ -117,12 +117,12 @@ namespace Etsu.Ui
 
         public static void ShowError(string text)
         {
-            MessageBox.Show(text, "ETSU", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageDialog.Show(Form.ActiveForm, text, true);
         }
 
         public static void ShowInfo(string text)
         {
-            MessageBox.Show(text, "ETSU", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageDialog.Show(Form.ActiveForm, text, false);
         }
     }
 }

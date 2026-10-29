@@ -7,13 +7,13 @@ namespace Etsu.Ui
     internal sealed class MessageDialog : Form
     {
         private const int BaseClientWidth = 380;
-        private const int BaseClientHeight = 170;
         private const int BaseMargin = 20;
         private const int BaseIconSize = 32;
         private const int BaseIconGap = 16;
-        private const int BaseLabelHeight = 80;
+        private const int BaseLabelHeight = 48;
         private const int BaseButtonWidth = 88;
         private const int BaseButtonHeight = 32;
+        private const int BaseButtonGap = 18;
 
         private readonly Label _label;
         private readonly PictureBox _icon;
@@ -22,7 +22,7 @@ namespace Etsu.Ui
         private readonly Bitmap _iconBitmap;
         private int _dpi = 96;
 
-        public MessageDialog(string text)
+        public MessageDialog(string text, bool isError)
         {
             Text = "ETSU";
             StartPosition = FormStartPosition.CenterParent;
@@ -34,11 +34,11 @@ namespace Etsu.Ui
             BackColor = UiTheme.Background;
             ForeColor = UiTheme.Foreground;
             AutoScaleMode = AutoScaleMode.None;
-            ClientSize = new Size(BaseClientWidth, BaseClientHeight);
+            ClientSize = new Size(BaseClientWidth, 160);
 
             _textFont = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
             Font = _textFont;
-            _iconBitmap = SystemIcons.Warning.ToBitmap();
+            _iconBitmap = (isError ? SystemIcons.Error : SystemIcons.Information).ToBitmap();
 
             _icon = new PictureBox();
             _icon.SizeMode = PictureBoxSizeMode.StretchImage;
@@ -69,9 +69,9 @@ namespace Etsu.Ui
             CancelButton = _okButton;
         }
 
-        public static void Show(IWin32Window owner, string text)
+        public static void Show(IWin32Window owner, string text, bool isError)
         {
-            using (MessageDialog dialog = new MessageDialog(text))
+            using (MessageDialog dialog = new MessageDialog(text, isError))
             {
                 dialog.ShowDialog(owner);
             }
@@ -81,7 +81,6 @@ namespace Etsu.Ui
         {
             base.OnLoad(e);
             _dpi = UiTheme.GetDpi(Handle);
-            ClientSize = new Size(Scale(BaseClientWidth), Scale(BaseClientHeight));
             LayoutControls();
         }
 
@@ -110,19 +109,30 @@ namespace Etsu.Ui
             int margin = Scale(BaseMargin);
             int iconSize = Scale(BaseIconSize);
             int iconGap = Scale(BaseIconGap);
-            int labelHeight = Scale(BaseLabelHeight);
             int buttonWidth = Scale(BaseButtonWidth);
             int buttonHeight = Scale(BaseButtonHeight);
+            int buttonGap = Scale(BaseButtonGap);
+            int width = Scale(BaseClientWidth);
+            int labelWidth = width - (margin + iconSize + iconGap) - margin;
 
+            Size textSize = TextRenderer.MeasureText(
+                _label.Text,
+                _textFont,
+                new Size(labelWidth, int.MaxValue),
+                TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
+            int labelHeight = Math.Max(Scale(BaseLabelHeight), textSize.Height);
+            int clientHeight = margin + Math.Max(iconSize, labelHeight) + buttonGap + buttonHeight + margin;
+
+            ClientSize = new Size(width, clientHeight);
             _icon.SetBounds(margin, margin + Scale(4), iconSize, iconSize);
             _label.SetBounds(
                 margin + iconSize + iconGap,
                 margin,
-                ClientSize.Width - (margin + iconSize + iconGap) - margin,
+                labelWidth,
                 labelHeight);
             _okButton.SetBounds(
-                ClientSize.Width - margin - buttonWidth,
-                ClientSize.Height - margin - buttonHeight,
+                width - margin - buttonWidth,
+                clientHeight - margin - buttonHeight,
                 buttonWidth,
                 buttonHeight);
         }
