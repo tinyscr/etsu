@@ -1,0 +1,75 @@
+name: Build x64
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $versionPath = "version"
+          if (-not (Test-Path -LiteralPath $versionPath)) {
+            throw "version file not found"
+          }
+          $version = [string](Get-Content -LiteralPath $versionPath -Raw)
+          $version = $version.Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "version must contain three numeric parts, for example 0.2.0."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $candidates = @(
+            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+            "C:\Program Files\Inno Setup 6\ISCC.exe"
+          )
+          $iscc = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "choco install innosetup failed" }
+          }
+
+      - name: Build x64
+        shell: pwsh
+        run: .\build.ps1 -Architecture x64
+
+      - name: Verify installer
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $setup = "dist/v${env:VERSION}_installer_x64.exe"
+          $checksums = "dist/SHA256SUMS_x64.txt"
+          if (-not (Test-Path $setup)) { throw "Setup exe was not built" }
+          if (-not (Test-Path $checksums)) { throw "Checksum file was not built" }
+          $parts = (Get-Content $checksums -Raw).Trim() -split '\s+', 2
+          if ($parts.Count -ne 2 -or $parts[1] -ne (Split-Path $setup -Leaf)) {
+            throw "Checksum file does not reference the installer"
+          }
+          $actual = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $parts[0]) { throw "Checksum does not match the installer" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: etsu-x64-${{ steps.version.outputs.version }}
+          path: |
+            dist/v${{ steps.version.outputs.version }}_installer_x64.exe
+            dist/SHA256SUMS_x64.txt
+          if-no-files-found: error
