@@ -4,7 +4,7 @@ ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). 
 
 ## Install
 
-Run the installer in `dist\`, for example `dist\v0.1.0_installer.exe`. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
+Run the installer in `dist\`, for example `dist\v0.2.0_installer.exe`. The wizard asks for the install location and shows the MIT license. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
 The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and warns when it cannot find ExifTool. Uninstall from Settings > Apps.
 
@@ -20,15 +20,13 @@ See [docs](docs/README.md) for usage, configuration, internals, troubleshooting,
 
 ## Build
 
+`build.ps1` reads the root `version` file and builds `dist\v<version>_installer.exe` and `dist\SHA256SUMS.txt`.
+
 ```powershell
 .\build.ps1
 ```
 
-Builds `dist\v0.1.0_installer.exe` and `dist\SHA256SUMS.txt`. Pass a version to override the default:
-
-```powershell
-.\build.ps1 0.2.0
-```
+To release, bump `version`, commit, and push to `main`. The release workflow creates the tag and a draft release.
 
 Run the regression suite with:
 

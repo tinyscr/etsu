@@ -8,11 +8,16 @@
 
 The app is a C# WinForms program. It uses `System.Windows.Forms`, `System.Drawing`, and the .NET Framework base libraries. It does not use a bundled runtime or WebView2.
 
+## Version
+
+The root `version` file is the only version source. It contains a plain `X.Y.Z` value with no leading `v`. `build.ps1` and `test.ps1` read it. `build.ps1` generates the assembly version metadata and passes the value to Inno Setup.
+
+To release, bump `version`, commit, and push to `main`. The release workflow creates the tag and a draft release.
+
 ## Build
 
 ```powershell
 .\build.ps1
-.\build.ps1 0.2.0
 ```
 
 `build.ps1` compiles every `.cs` file under `src\`, embeds `src\Assets\icon.ico` and `src\Assets\etsu.manifest`, and writes `bin\etsu.exe`. It then runs the Inno Setup compiler and writes:
@@ -21,8 +26,6 @@ The app is a C# WinForms program. It uses `System.Windows.Forms`, `System.Drawin
 dist\v<version>_installer.exe
 dist\SHA256SUMS.txt
 ```
-
-The version defaults to `0.1.0`. A leading `v` is removed, so `.\build.ps1 v0.2.0` and `.\build.ps1 0.2.0` produce the same file name.
 
 `build.bat` and `test.bat` are local convenience triggers. They are ignored by Git; the real scripts are `build.ps1` and `test.ps1`.
 
@@ -46,6 +49,7 @@ The build script looks for `ISCC.exe` in `%LOCALAPPDATA%\Programs\Inno Setup 6`,
 
 ```text
 etsu/
+  version
   build.ps1
   test.ps1
   src/
@@ -82,7 +86,7 @@ Build outputs are `bin\etsu.exe`, `obj\Version.g.cs`, `bin\tests\etsu-tests.exe`
 
 ## Installer
 
-`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. It seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, and `tmp`.
+`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. `build.ps1` passes the version from the root `version` file. A direct Inno compile without `AppVersion` fails. The installer seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, and `tmp`.
 
 ## Icon and manifest resources
 
@@ -92,14 +96,14 @@ The manifest requests Common Controls 6.0 for themed controls, PerMonitorV2 DPI 
 
 ## Release workflow
 
-`.github/workflows/release.yml` is a manual workflow. It accepts a tag in the form `vMAJOR.MINOR.PATCH`, runs the regression suite, installs Inno Setup when needed, calls `build.ps1`, verifies the installer checksum, and creates a draft GitHub release with:
+`.github/workflows/release.yml` runs when `version` changes on `main`. It validates the version, fails if the tag already exists, runs the regression suite, installs Inno Setup when needed, calls `build.ps1`, verifies the installer checksum, and creates the tag and a draft GitHub release containing:
 
 ```text
 v<version>_installer.exe
 SHA256SUMS.txt
 ```
 
-The workflow runs on GitHub Actions. A local clone can build the same app and installer with `build.ps1`.
+A manual run reads the same `version` file. The workflow runs on GitHub Actions. A local clone can build the same app and installer with `build.ps1`.
 
 ## Local check
 
