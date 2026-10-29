@@ -102,7 +102,7 @@ The manifest requests Common Controls 6.0 for themed controls, PerMonitorV2 DPI 
 
 ## Release workflow
 
-`.github/workflows/release.yml` runs when `version` changes on `main`. It validates the version, fails if the tag already exists, runs the regression suite, calls `build_x64.yml` and `build_x32.yml`, verifies both installer checksums, and creates the tag and a draft GitHub release containing:
+`.github/workflows/release.yml` runs when `version` changes on `main`. It validates the version, fails if the tag already exists, runs the regression suite, calls `build_x64.yml` and `build_x32.yml`, verifies both installer checksums, and creates the tag and a draft GitHub release. The release body comes from `.github/RELEASE_TEMPLATE.md`, with the commit and tag filled in. The release contains:
 
 ```text
 v<version>_installer_x64.exe
