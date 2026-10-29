@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Etsu.App;
@@ -11,28 +10,33 @@ namespace Etsu.Ops
     {
         private static readonly Regex DeletingTag = new Regex(@"Deleting\s+(.+)$", RegexOptions.Compiled);
 
-        public static void Run(string file, IOperationReporter reporter, CancellationToken token)
+        public static bool Run(string[] files, IOperationReporter reporter, CancellationToken token)
         {
-            if (!File.Exists(file))
-            {
-                reporter.Log("[ABORT] File not found: " + file);
-                throw new InvalidOperationException("File not found: " + file);
-            }
-
-            ProcessPipeline.Run(
-                file,
+            return ProcessPipeline.RunBatch(
+                files,
                 reporter,
                 token,
                 "Cleaning metadata",
-                delegate(string temp, string original)
+                "cleaned",
+                delegate(PipelineFile file)
                 {
+                    ExifRunner.LogCommand(
+                        reporter,
+                        "-all=",
+                        "-overwrite_original",
+                        "-P",
+                        "-v",
+                        file.Temp);
+
                     ProcessResult result = ExifRunner.Run(
                         token,
                         "-all=",
                         "-overwrite_original",
                         "-P",
                         "-v",
-                        temp);
+                        file.Temp);
+
+                    ExifRunner.LogOutput(reporter, result.Output);
 
                     if (result.ExitCode != 0)
                     {
@@ -40,9 +44,8 @@ namespace Etsu.Ops
                         {
                             throw new OperationCanceledException(token);
                         }
-                        reporter.Log("[ABORT] ExifTool failed on " + Path.GetFileName(original));
-                        ExifRunner.LogOutput(reporter, result.Output);
-                        throw new InvalidOperationException("ExifTool failed on " + Path.GetFileName(original));
+                        reporter.LogRaw("[ABORT] ExifTool failed on " + file.Name);
+                        throw new InvalidOperationException("ExifTool failed on " + file.Name);
                     }
 
                     List<string> deleted = new List<string>();
@@ -56,7 +59,6 @@ namespace Etsu.Ops
                         }
                     }
 
-                    reporter.Log("  " + original);
                     if (deleted.Count == 0)
                     {
                         reporter.Log("    (no metadata found)");
@@ -68,9 +70,8 @@ namespace Etsu.Ops
                             reporter.Log("    - " + deleted[i]);
                         }
                     }
-                });
-
-            reporter.Log("All done. 1 file cleaned in place.");
+                },
+                null);
         }
     }
 }

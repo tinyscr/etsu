@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.IO;
 using System.Threading;
 using Etsu.App;
 
@@ -8,25 +7,30 @@ namespace Etsu.Ops
 {
     internal static class DateOperation
     {
-        public static void Run(string file, DateTime when, IOperationReporter reporter, CancellationToken token)
+        public static bool Run(
+            string[] files,
+            DateTime when,
+            IOperationReporter reporter,
+            CancellationToken token)
         {
-            if (!File.Exists(file))
-            {
-                reporter.Log("[ABORT] File not found: " + file);
-                throw new InvalidOperationException("File not found: " + file);
-            }
-
-            reporter.Log("Target date: " + when.ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture));
-            reporter.Log("");
-
             string exifDate = when.ToString("yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture);
-            ProcessPipeline.Run(
-                file,
+            return ProcessPipeline.RunBatch(
+                files,
                 reporter,
                 token,
                 "Setting date",
-                delegate(string temp, string original)
+                "date set",
+                delegate(PipelineFile file)
                 {
+                    ExifRunner.LogCommand(
+                        reporter,
+                        "-AllDates=" + exifDate,
+                        "-FileModifyDate=" + exifDate,
+                        "-FileCreateDate=" + exifDate,
+                        "-overwrite_original",
+                        "-P",
+                        file.Temp);
+
                     ProcessResult result = ExifRunner.Run(
                         token,
                         "-AllDates=" + exifDate,
@@ -34,7 +38,9 @@ namespace Etsu.Ops
                         "-FileCreateDate=" + exifDate,
                         "-overwrite_original",
                         "-P",
-                        temp);
+                        file.Temp);
+
+                    ExifRunner.LogOutput(reporter, result.Output);
 
                     if (result.ExitCode != 0)
                     {
@@ -42,24 +48,24 @@ namespace Etsu.Ops
                         {
                             throw new OperationCanceledException(token);
                         }
-                        reporter.Log("[ABORT] ExifTool failed on " + Path.GetFileName(original));
-                        ExifRunner.LogOutput(reporter, result.Output);
-                        throw new InvalidOperationException("ExifTool failed on " + Path.GetFileName(original));
+                        reporter.LogRaw("[ABORT] ExifTool failed on " + file.Name);
+                        throw new InvalidOperationException("ExifTool failed on " + file.Name);
                     }
 
-                    reporter.Log("  Set OK: " + Path.GetFileName(original));
+                    reporter.Log("    Date set");
+                },
+                delegate(PipelineFile file)
+                {
+                    try
+                    {
+                        AppRuntime.SetCreationTime(file.Original, when);
+                    }
+                    catch (Exception ex)
+                    {
+                        reporter.Log(
+                            "  Warning: could not set creation time on " + file.Name + ": " + ex.Message);
+                    }
                 });
-
-            try
-            {
-                AppRuntime.SetCreationTime(file, when);
-            }
-            catch (Exception ex)
-            {
-                reporter.Log("Warning: could not set creation time on " + Path.GetFileName(file) + ": " + ex.Message);
-            }
-
-            reporter.Log("All done. 1 file date set in place.");
         }
     }
 }

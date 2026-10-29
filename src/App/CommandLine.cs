@@ -4,12 +4,12 @@ namespace Etsu.App
 {
     public static class CommandLine
     {
-        public static bool TryParse(string[] args, out string action, out string file)
+        public static bool TryParse(string[] args, out string action, out string[] files)
         {
             action = null;
-            file = null;
+            files = null;
 
-            if (args == null || args.Length != 2)
+            if (args == null || args.Length < 2)
             {
                 return false;
             }
@@ -20,13 +20,23 @@ namespace Etsu.App
                 return false;
             }
 
-            if (string.IsNullOrEmpty(args[1]))
+            if (candidate == "read" && args.Length != 2)
             {
                 return false;
             }
 
+            string[] parsed = new string[args.Length - 1];
+            for (int i = 0; i < parsed.Length; i++)
+            {
+                if (string.IsNullOrEmpty(args[i + 1]))
+                {
+                    return false;
+                }
+                parsed[i] = args[i + 1];
+            }
+
             action = candidate;
-            file = args[1];
+            files = parsed;
             return true;
         }
 
@@ -38,6 +48,21 @@ namespace Etsu.App
                     return "Read metadata";
                 case "clean":
                     return "Clean metadata";
+                case "date":
+                    return "Set date";
+                default:
+                    return action ?? "";
+            }
+        }
+
+        public static string OperationLabel(string action)
+        {
+            switch (action)
+            {
+                case "read":
+                    return "Read metadata";
+                case "clean":
+                    return "Clean";
                 case "date":
                     return "Set date";
                 default:

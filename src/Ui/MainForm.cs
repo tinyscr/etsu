@@ -28,7 +28,7 @@ namespace Etsu.Ui
         private const float DefaultTextSize = 11.5f;
 
         private readonly string _operation;
-        private readonly string _file;
+        private readonly string[] _files;
         private readonly DateTime? _when;
         private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
         private readonly Reporter _reporter;
@@ -48,13 +48,13 @@ namespace Etsu.Ui
 
         public int ExitCode { get; private set; }
 
-        public MainForm(string operation, string file, DateTime? when, string exifVersion)
+        public MainForm(string operation, string[] files, DateTime? when, string exifVersion)
         {
             _operation = operation;
-            _file = file;
+            _files = files ?? new string[0];
             _when = when;
 
-            Text = BuildTitle(operation, file);
+            Text = BuildTitle(operation, _files);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.Sizable;
             MaximizeBox = true;
@@ -111,7 +111,7 @@ namespace Etsu.Ui
             AcceptButton = _okButton;
 
             _reporter = new Reporter(AppInfo.Version, exifVersion ?? "", Append);
-            _reporter.Header(_operation, _file);
+            _reporter.Header(_operation, _files);
         }
 
         protected override void OnLoad(EventArgs e)
@@ -282,9 +282,10 @@ namespace Etsu.Ui
         private void RunOperation()
         {
             Exception error = null;
+            bool success = false;
             try
             {
-                OperationRunner.Run(_operation, _file, _when, _reporter, _cancellation.Token);
+                success = OperationRunner.Run(_operation, _files, _when, _reporter, _cancellation.Token);
             }
             catch (OperationCanceledException ex)
             {
@@ -297,7 +298,12 @@ namespace Etsu.Ui
                 Append("Failed: " + ex.Message);
             }
 
-            string logPath = AppRuntime.WriteLog(_operation, _reporter.Lines);
+            if (!success)
+            {
+                ExitCode = 1;
+            }
+
+            string logPath = AppRuntime.WriteLog(_operation, _reporter.RawLines);
             Finish(error, logPath);
         }
 
@@ -508,13 +514,22 @@ namespace Etsu.Ui
             return UiTheme.Scale(value, _dpi);
         }
 
-        private static string BuildTitle(string operation, string file)
+        private static string BuildTitle(string operation, string[] files)
         {
-            string title = "ETSU — " + CommandLine.OperationTitle(operation);
-            string name = Path.GetFileName(file);
+            string title = CommandLine.OperationTitle(operation);
+            if (files == null || files.Length == 0)
+            {
+                return title;
+            }
+            if (files.Length > 1)
+            {
+                return title + " · " + files.Length + " files";
+            }
+
+            string name = Path.GetFileName(files[0]);
             if (!string.IsNullOrEmpty(name) && name.Length <= 48)
             {
-                title += " — " + name;
+                title += " · " + name;
             }
             return title;
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Etsu.App;
 using Etsu.Ops;
 
 namespace Etsu.Ui
@@ -13,6 +14,7 @@ namespace Etsu.Ui
         private static readonly string Rule = new string('━', RuleWidth);
 
         private readonly List<string> _lines = new List<string>();
+        private readonly List<string> _rawLines = new List<string>();
         private readonly string _appVersion;
         private readonly string _exifVersion;
         private readonly Action<string> _sink;
@@ -29,22 +31,40 @@ namespace Etsu.Ui
             get { return _lines; }
         }
 
+        public IList<string> RawLines
+        {
+            get { return _rawLines; }
+        }
+
         public void Header(string operation, string file)
         {
-            string[] lines =
-            {
-                "┏┓  ┏┳┓  ┏┓  ┳┳",
-                "┣    ┃   ┗┓  ┃┃",
-                "┗┛   ┻   ┗┛  ┗┛",
-                Rule,
-                " App: " + _appVersion + " | Exiftool: " + _exifVersion + " | Operation: " + operation,
-                "",
-                " File(s): " + file,
-                Rule,
-                ""
-            };
+            Header(operation, new[] { file });
+        }
 
-            for (int i = 0; i < lines.Length; i++)
+        public void Header(string operation, string[] files)
+        {
+            int count = files == null ? 0 : files.Length;
+            List<string> lines = new List<string>();
+            lines.Add("┏┓  ┏┳┓  ┏┓  ┳┳");
+            lines.Add("┣    ┃   ┗┓  ┃┃");
+            lines.Add("┗┛   ┻   ┗┛  ┗┛");
+            lines.Add(Rule);
+            lines.Add(
+                " App: " + _appVersion + " | Exiftool: " + _exifVersion +
+                " | Operation: " + CommandLine.OperationLabel(operation));
+            lines.Add("");
+            lines.Add(" File(s): " + CountText(count));
+            if (files != null)
+            {
+                for (int i = 0; i < files.Length; i++)
+                {
+                    lines.Add(" " + (files[i] ?? ""));
+                }
+            }
+            lines.Add(Rule);
+            lines.Add("");
+
+            for (int i = 0; i < lines.Count; i++)
             {
                 Write(lines[i]);
             }
@@ -70,21 +90,21 @@ namespace Etsu.Ui
                 Blank(2);
             }
             Write(line);
+        }
 
-            int width = RuleWidth;
-            if (number > 1)
-            {
-                width = line.Length + 2;
-            }
-            Write(new string('━', width));
+        public void LogRaw(string line)
+        {
+            _rawLines.Add(line ?? "");
         }
 
         private void Write(string line)
         {
-            _lines.Add(line);
+            string text = line ?? "";
+            _lines.Add(text);
+            _rawLines.Add(text);
             if (_sink != null)
             {
-                _sink(line);
+                _sink(text);
             }
         }
 
@@ -94,6 +114,11 @@ namespace Etsu.Ui
             {
                 Write("");
             }
+        }
+
+        private static string CountText(int count)
+        {
+            return count + (count == 1 ? " file" : " files");
         }
     }
 }

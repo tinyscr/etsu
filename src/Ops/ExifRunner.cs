@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using Etsu.App;
 
@@ -15,13 +16,33 @@ namespace Etsu.Ops
             return ProcessRunner.Run(AppRuntime.ExifPath, arguments, token);
         }
 
+        public static void LogCommand(IOperationReporter reporter, params string[] arguments)
+        {
+            StringBuilder text = new StringBuilder("[exiftool]");
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                text.Append(' ');
+                text.Append(Quote(arguments[i]));
+            }
+            reporter.LogRaw(text.ToString());
+        }
+
         public static void LogOutput(IOperationReporter reporter, string output)
         {
             string[] lines = AppRuntime.SplitLines(output);
             for (int i = 0; i < lines.Length; i++)
             {
-                reporter.Log("  " + lines[i]);
+                reporter.LogRaw("  " + lines[i]);
             }
+        }
+
+        private static string Quote(string value)
+        {
+            if (value == null)
+            {
+                return "";
+            }
+            return value.IndexOf(' ') >= 0 ? "\"" + value + "\"" : value;
         }
     }
 }

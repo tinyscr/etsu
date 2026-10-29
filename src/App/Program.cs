@@ -25,13 +25,24 @@ namespace Etsu
             }
 
             string action;
-            string file;
-            if (!CommandLine.TryParse(args, out action, out file))
+            string[] files;
+            if (!CommandLine.TryParse(args, out action, out files))
             {
                 UiTheme.ShowInfo(
-                    "Usage: etsu read|clean|date <file>\n\n" +
+                    "Usage: etsu read <file>\n" +
+                    "       etsu clean|date <file> [file...]\n\n" +
                     "ETSU normally runs from the Explorer context menu.");
                 return 2;
+            }
+
+            if (action != "read" && files.Length == 1)
+            {
+                string[] collected = BatchCollector.Collect(action, files[0]);
+                if (collected == null)
+                {
+                    return 0;
+                }
+                files = collected;
             }
 
             string exifError;
@@ -61,7 +72,7 @@ namespace Etsu
 
             try
             {
-                using (MainForm form = new MainForm(action, file, when, AppRuntime.ExifVersion))
+                using (MainForm form = new MainForm(action, files, when, AppRuntime.ExifVersion))
                 {
                     Application.Run(form);
                     return form.ExitCode;
