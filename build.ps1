@@ -56,23 +56,31 @@ function Get-PeMachine([string]$Path) {
 }
 
 function Find-Iscc {
-    $candidates = @()
+    $roots = @()
     if ($env:LOCALAPPDATA) {
-        $candidates += Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe"
+        $roots += Join-Path $env:LOCALAPPDATA "Programs"
     }
     $programFilesX86 = ${env:ProgramFiles(x86)}
     if ($programFilesX86) {
-        $candidates += Join-Path $programFilesX86 "Inno Setup 6\ISCC.exe"
+        $roots += $programFilesX86
     }
     if ($env:ProgramFiles) {
-        $candidates += Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe"
+        $roots += $env:ProgramFiles
     }
-    foreach ($candidate in $candidates) {
-        if (Test-Path -LiteralPath $candidate) {
-            return $candidate
+    foreach ($root in $roots) {
+        if (-not (Test-Path -LiteralPath $root)) {
+            continue
+        }
+        $dirs = Get-ChildItem -LiteralPath $root -Directory -Filter "Inno Setup *" -ErrorAction SilentlyContinue |
+            Sort-Object Name -Descending
+        foreach ($dir in $dirs) {
+            $candidate = Join-Path $dir.FullName "ISCC.exe"
+            if (Test-Path -LiteralPath $candidate) {
+                return $candidate
+            }
         }
     }
-    Fail "Inno Setup 6 not found. Install it with: winget install JRSoftware.InnoSetup --scope user"
+    Fail "Inno Setup not found. Install it with: winget install JRSoftware.InnoSetup --scope user"
 }
 
 if (-not (Test-Path -LiteralPath $versionPath)) {

@@ -4,7 +4,7 @@
 
 - 32-bit or 64-bit Windows.
 - .NET Framework 4.5 or later. The build uses the `csc.exe` that ships with .NET Framework, so it needs no SDK or NuGet packages.
-- [Inno Setup](https://jrsoftware.org/isinfo.php) 6.
+- [Inno Setup](https://jrsoftware.org/isinfo.php) 6 or later.
 
 The app is a C# WinForms program. It uses `System.Windows.Forms`, `System.Drawing`, and the .NET Framework base libraries. It does not use a bundled runtime or WebView2.
 
@@ -32,13 +32,13 @@ dist\SHA256SUMS_<arch>.txt
 
 `build.bat` and `test.bat` are local convenience triggers. They are ignored by Git; the real scripts are `build.ps1` and `test.ps1`.
 
-Install Inno Setup 6 with:
+Install Inno Setup 6 or later with:
 
 ```powershell
 winget install JRSoftware.InnoSetup --scope user
 ```
 
-The build script looks for `ISCC.exe` in `%LOCALAPPDATA%\Programs\Inno Setup 6`, `%ProgramFiles(x86)%\Inno Setup 6`, and `%ProgramFiles%\Inno Setup 6`.
+The build script looks for `ISCC.exe` in the highest-numbered `Inno Setup *` folder under `%LOCALAPPDATA%\Programs`, `%ProgramFiles(x86)%`, or `%ProgramFiles%`.
 
 ## Tests
 

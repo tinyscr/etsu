@@ -37,7 +37,7 @@ Run the regression suite with:
 .\test.ps1
 ```
 
-To build, install .NET Framework 4.5 or later and Inno Setup 6. See [Development](docs/development.md) for the source layout, build steps, and release workflow.
+To build, install .NET Framework 4.5 or later and Inno Setup 6 or later. See [Development](docs/development.md) for the source layout, build steps, and release workflow.
 
 ## License
 

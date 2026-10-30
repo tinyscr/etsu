@@ -17,7 +17,7 @@ ETSU is a Windows app that reads metadata, removes metadata, and sets EXIF dates
 - 32-bit or 64-bit Windows.
 - [ExifTool](https://exiftool.org/), either on PATH, next to `etsu.exe`, or at a path set in `config.ini`. Use a 32-bit ExifTool build on 32-bit Windows.
 - .NET Framework 4.5 or later.
-- Inno Setup 6 only when building from source.
+- Inno Setup 6 or later only when building from source.
 
 ETSU installs for the current user. It does not need administrator rights and is not a portable app. The installer checks .NET Framework 4.5 before installing and warns if ExifTool is missing.
 
