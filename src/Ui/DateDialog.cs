@@ -44,7 +44,7 @@ namespace Etsu.Ui
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
-            ShowIcon = false;
+            ShowIcon = true;
             BackColor = UiTheme.Background;
             ForeColor = UiTheme.Foreground;
             AutoScaleMode = AutoScaleMode.None;
@@ -162,6 +162,13 @@ namespace Etsu.Ui
         {
             base.OnHandleCreated(e);
             UiTheme.ApplyDarkTitleBar(Handle);
+            try
+            {
+                Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            }
+            catch (Exception)
+            {
+            }
         }
 
         protected override void OnShown(EventArgs e)
