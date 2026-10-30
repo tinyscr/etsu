@@ -15,6 +15,7 @@ namespace Etsu.Ui
         public static readonly Color ButtonHover = Color.FromArgb(48, 48, 54);
         public static readonly Color ButtonPressed = Color.FromArgb(58, 58, 66);
         public static readonly Color ButtonBorder = Color.FromArgb(64, 64, 72);
+        public static readonly Color Link = Color.FromArgb(120, 180, 255);
 
         private const int DwmUseImmersiveDarkMode = 20;
         private const int DwmUseImmersiveDarkModeLegacy = 19;
@@ -115,14 +116,26 @@ namespace Etsu.Ui
             }
         }
 
+        public static void OpenUrl(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                ShowError("Could not open link:\n" + url + "\n\n" + ex.Message);
+            }
+        }
+
         public static void ShowError(string text)
         {
             MessageDialog.Show(Form.ActiveForm, text, true);
         }
 
-        public static void ShowInfo(string text)
+        public static void ShowInfo(string text, int clientWidth = 0, string linkUrl = null)
         {
-            MessageDialog.Show(Form.ActiveForm, text, false);
+            MessageDialog.Show(Form.ActiveForm, text, false, clientWidth, linkUrl);
         }
     }
 }

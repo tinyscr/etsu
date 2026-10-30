@@ -7,6 +7,9 @@ namespace Etsu
 {
     internal static class Program
     {
+        private const string UsageUrl = "https://github.com/tinyscr/etsu/blob/main/docs/usage.md";
+        private const int UsageDialogWidth = 460;
+
         [STAThread]
         private static int Main(string[] args)
         {
@@ -29,9 +32,10 @@ namespace Etsu
             if (!CommandLine.TryParse(args, out action, out files))
             {
                 UiTheme.ShowInfo(
-                    "Usage: etsu read <file>\n" +
-                    "       etsu clean|date <file> [file...]\n\n" +
-                    "ETSU normally runs from the Explorer context menu.");
+                    "ETSU is intended to be used from the Explorer context menu. " +
+                    "For CLI usage, refer to:\n" + UsageUrl,
+                    UsageDialogWidth,
+                    UsageUrl);
                 return 2;
             }
 

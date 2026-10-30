@@ -15,26 +15,37 @@ namespace Etsu.Ui
         private const int BaseButtonHeight = 32;
         private const int BaseButtonGap = 18;
 
-        private readonly Label _label;
+        private readonly LinkLabel _label;
         private readonly PictureBox _icon;
         private readonly Button _okButton;
         private readonly Font _textFont;
         private readonly Bitmap _iconBitmap;
+        private readonly int _clientWidth;
         private int _dpi = 96;
 
-        public MessageDialog(string text, bool isError)
+        public MessageDialog(string text, bool isError, int clientWidth = 0, string linkUrl = null)
         {
-            Text = "ETSU";
+            _clientWidth = clientWidth > 0 ? clientWidth : BaseClientWidth;
+            Text = "";
+            AccessibleName = "ETSU";
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
-            ShowIcon = false;
+            ShowIcon = true;
             BackColor = UiTheme.Background;
             ForeColor = UiTheme.Foreground;
             AutoScaleMode = AutoScaleMode.None;
-            ClientSize = new Size(BaseClientWidth, 160);
+            ClientSize = new Size(_clientWidth, 160);
+
+            try
+            {
+                Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            }
+            catch (Exception)
+            {
+            }
 
             _textFont = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
             Font = _textFont;
@@ -45,7 +56,7 @@ namespace Etsu.Ui
             _icon.Image = _iconBitmap;
             _icon.BackColor = UiTheme.Background;
 
-            _label = new Label();
+            _label = new LinkLabel();
             _label.AutoSize = false;
             _label.Text = text ?? "";
             _label.TextAlign = ContentAlignment.MiddleLeft;
@@ -53,6 +64,27 @@ namespace Etsu.Ui
             _label.Font = _textFont;
             _label.ForeColor = UiTheme.Foreground;
             _label.BackColor = UiTheme.Background;
+            _label.LinkColor = UiTheme.Link;
+            _label.ActiveLinkColor = UiTheme.Foreground;
+            _label.VisitedLinkColor = UiTheme.Link;
+            _label.LinkBehavior = LinkBehavior.HoverUnderline;
+
+            if (!string.IsNullOrEmpty(linkUrl))
+            {
+                int start = _label.Text.IndexOf(linkUrl, StringComparison.Ordinal);
+                if (start >= 0)
+                {
+                    _label.Links.Add(start, linkUrl.Length, linkUrl);
+                    _label.LinkClicked += delegate(object sender, LinkLabelLinkClickedEventArgs e)
+                    {
+                        string url = e.Link.LinkData as string;
+                        if (!string.IsNullOrEmpty(url))
+                        {
+                            UiTheme.OpenUrl(url);
+                        }
+                    };
+                }
+            }
 
             _okButton = new Button();
             _okButton.Text = "OK";
@@ -69,9 +101,9 @@ namespace Etsu.Ui
             CancelButton = _okButton;
         }
 
-        public static void Show(IWin32Window owner, string text, bool isError)
+        public static void Show(IWin32Window owner, string text, bool isError, int clientWidth = 0, string linkUrl = null)
         {
-            using (MessageDialog dialog = new MessageDialog(text, isError))
+            using (MessageDialog dialog = new MessageDialog(text, isError, clientWidth, linkUrl))
             {
                 dialog.ShowDialog(owner);
             }
@@ -112,7 +144,7 @@ namespace Etsu.Ui
             int buttonWidth = Scale(BaseButtonWidth);
             int buttonHeight = Scale(BaseButtonHeight);
             int buttonGap = Scale(BaseButtonGap);
-            int width = Scale(BaseClientWidth);
+            int width = Scale(_clientWidth);
             int labelWidth = width - (margin + iconSize + iconGap) - margin;
 
             Size textSize = TextRenderer.MeasureText(
