@@ -40,12 +40,13 @@ If the file or a section is missing, ETSU uses the defaults.
 | Config | `<install>\config.ini` |
 | Logs | `<install>\logs\etsu\` |
 | App temp directory | `<install>\tmp\` |
+| ExifTool, when installed by Setup | `<install>\exiftool.exe` and `<install>\exiftool_files\` |
 | Operation workspace | Beside the original file (`<original folder>\.etsu_<random>\`) |
 | Default install directory | `%LOCALAPPDATA%\Programs\ETSU` |
 
 ETSU creates the log and temp directories at startup and checks that the temp directory is writable. The operation workspace is separate from the app temp directory because the replacement step needs the workspace and the original file on the same volume.
 
-The uninstaller removes `config.ini`, `logs`, and `tmp` from the install directory. Back up `config.ini` before uninstalling if you want to keep it.
+The uninstaller removes `config.ini`, `logs`, `tmp`, and ExifTool files that Setup installed. It removes the install folder from PATH only when Setup added it. Back up `config.ini` before uninstalling if you want to keep it.
 
 ## Logs
 
@@ -68,12 +69,14 @@ A successful run deletes the `.bak` file. ETSU does not automatically restore th
 
 ## ExifTool
 
-ETSU does not bundle ExifTool. Install it from [exiftool.org](https://exiftool.org/) and use one of these options:
+ETSU does not bundle ExifTool. The installer can download ExifTool 13.60 from SourceForge, verify its SHA-256 checksum, extract it into the install directory, and add that directory to the current user's PATH. The task appears only when ExifTool is not already found. You can skip it and use one of these options instead:
 
 1. Set `exiftoolPATH` to the full path of `exiftool.exe`.
 2. Put `exiftool.exe` on PATH.
 3. Put `exiftool.exe` next to `etsu.exe`.
 
-ETSU uses `exiftoolPATH` when it is not `null`. If that path does not exist, ETSU shows an error and does not fall back to PATH. Clean and date logs show the detected ExifTool version.
+ETSU uses `exiftoolPATH` when it is not `null`. If that path does not exist, ETSU shows an error and does not fall back to PATH. After a successful installer download, Setup resets an invalid `exiftoolPATH` to `null` so ETSU can use the installed copy. Clean and date logs show the detected ExifTool version.
+
+The installer adds the install directory itself to PATH, so `etsu.exe` is also available from a terminal. Restart Explorer or sign out and back in if a new terminal still does not see the updated PATH.
 
 [Documentation](README.md)

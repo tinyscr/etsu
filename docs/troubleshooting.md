@@ -4,11 +4,15 @@
 
 Open a terminal and run `exiftool -ver`. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` next to `etsu.exe`. On 32-bit Windows, use a 32-bit ExifTool build.
 
-If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `<install>\config.ini`. The default location is `%LOCALAPPDATA%\Programs\ETSU\config.ini`.
+If you skipped the ExifTool task during Setup, run Setup again or install ExifTool manually. Setup only offers the task when ExifTool is not already found. When accepted, it downloads ExifTool 13.60, verifies the SHA-256 checksum, extracts it beside `etsu.exe`, and adds the install folder to your user PATH. It never needs administrator rights.
 
-If you just changed PATH, restart Explorer or sign out and back in so new actions see the new value.
+If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `<install>\config.ini`. The default location is `%LOCALAPPDATA%\Programs\ETSU\config.ini`. After a successful installer download, Setup resets an invalid value to `null` automatically.
 
-The installer checks for ExifTool before installing and lets you continue without it.
+If you just changed PATH, restart Explorer or sign out and back in so new actions see the new value. The installer notifies running apps, but already-open terminals keep their old environment.
+
+## The installer cannot download ExifTool
+
+Setup offers Retry, Continue without ExifTool, or Cancel. Check the internet connection, proxy settings, and access to SourceForge, then retry. You can also continue without it and install ExifTool later from [exiftool.org](https://exiftool.org/).
 
 ## The Explorer menu is missing
 
@@ -60,16 +64,16 @@ The current build is not code-signed. Windows SmartScreen may warn. GitHub relea
 
 ## Uninstall leaves files
 
-The uninstaller removes the Explorer menu, installed files, `config.ini`, `logs`, and `tmp` from the install directory. Files you added to the install directory are left in place. Remove them manually if you do not need them.
+The uninstaller removes the Explorer menu, installed files, `config.ini`, `logs`, `tmp`, and ExifTool files that Setup installed. Files you added to the install directory are left in place. Remove them manually if you do not need them.
 
-Uninstall removes `config.ini` from the install directory. Back it up first if you want to keep the configuration.
+Uninstall removes the install folder from PATH only when Setup added that entry. A PATH entry you added yourself is left in place. Uninstall also removes `config.ini`; back it up first if you want to keep the configuration.
 
 ## Known limitations
 
 - The command line is limited to the internal `read|clean|date` actions; there is no file picker.
 - Read is single-file. Clean and Set date accept multiple selected files.
 - Read shows a tag/value text view, not a categorized summary.
-- ExifTool is not bundled.
+- ExifTool is not bundled. Setup can download it during installation.
 - Clean does not keep the original timestamps.
 - The Explorer menu is for files, not folders.
 - Separate actions or batches can open separate windows. ETSU does not prevent two windows from working on the same file.

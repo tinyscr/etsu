@@ -4,13 +4,13 @@
 
 - 32-bit or 64-bit Windows.
 - .NET Framework 4.5 or later. The build uses the `csc.exe` that ships with .NET Framework, so it needs no SDK or NuGet packages.
-- [Inno Setup](https://jrsoftware.org/isinfo.php) 6 or later.
+- [Inno Setup](https://jrsoftware.org/isinfo.php) 7 or later.
 
 The app is a C# WinForms program. It uses `System.Windows.Forms`, `System.Drawing`, and the .NET Framework base libraries. It does not use a bundled runtime or WebView2.
 
 ## Version
 
-The root `version` file is the only version source. It contains a plain `X.Y.Z` value with no leading `v`. `build.ps1` and `test.ps1` read it. `build.ps1` generates the assembly version metadata and passes the version and architecture to Inno Setup. The release workflow builds both x64 and x86.
+The root `version` file is the only version source. It contains a plain `X.Y.Z` value with no leading `v`. `build.ps1` and `test.ps1` read it. `build.ps1` generates the assembly version metadata and passes the version, architecture, and pinned ExifTool version and checksum to Inno Setup. The release workflow builds both x64 and x86.
 
 To release, bump `version`, commit, and push to `main`. The release workflow creates the tag and a draft release.
 
@@ -32,13 +32,13 @@ dist\SHA256SUMS_<arch>.txt
 
 `build.bat` and `test.bat` are local convenience triggers. They are ignored by Git; the real scripts are `build.ps1` and `test.ps1`.
 
-Install Inno Setup 6 or later with:
+Install Inno Setup 7 or later with:
 
 ```powershell
-winget install JRSoftware.InnoSetup --scope user
+winget install JRSoftware.InnoSetup.7 --scope user
 ```
 
-The build script looks for `ISCC.exe` in the highest-numbered `Inno Setup *` folder under `%LOCALAPPDATA%\Programs`, `%ProgramFiles(x86)%`, or `%ProgramFiles%`.
+The build script looks for `ISCC.exe` in the highest-numbered `Inno Setup *` folder under `%LOCALAPPDATA%\Programs`, `%ProgramFiles(x86)%`, or `%ProgramFiles%`. The installer script refuses to compile with an older Inno Setup version because it uses native archive extraction.
 
 ## Tests
 
@@ -92,9 +92,13 @@ Build outputs are `bin\etsu.exe`, `obj\Version.g.cs`, `bin\tests\etsu-tests.exe`
 
 ## Installer
 
-`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. `build.ps1` passes the version and architecture. A direct Inno compile without `AppVersion` or `AppArchitecture` fails. The x64 installer uses `x64compatible` and 64-bit install mode; the x86 installer uses `x86compatible`. Both use the same AppId, so only one architecture is installed at a time. The installer seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, and `tmp`.
+`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. `build.ps1` passes the version, architecture, and ExifTool version and SHA-256 checksum. A direct Inno compile without `AppVersion`, `AppArchitecture`, or `ExifToolHash` fails. The x64 installer uses `x64compatible` and 64-bit install mode; the x86 installer uses `x86compatible`. Both use the same AppId, so only one architecture is installed at a time. The installer seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, `tmp`, and ExifTool files that Setup installed.
 
-The wizard is forced dark with `WizardStyle=modern dark includetitlebar` and uses `LICENSE.rtf` for the centered license heading. Before copying files, `PrepareToInstall` checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool (warns and lets you continue). The checks run on an output progress page.
+The wizard is forced dark with `WizardStyle=modern dark includetitlebar` and uses `LICENSE.rtf` for the centered license heading. Before copying files, `PrepareToInstall` checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool. If ExifTool is missing and the user leaves the download task selected, `ssInstall` downloads the pinned `exiftool-<version>_<arch>.zip` from SourceForge, verifies its SHA-256, extracts it with native `ExtractArchive`, renames `exiftool(-k).exe` to `exiftool.exe`, and lets `[Files]` copy the package beside `etsu.exe`. The download and checksum are pinned in `build.ps1`; update both when bumping ExifTool.
+
+After a successful download, Setup adds the install folder to `HKCU\Environment\Path`, records that it added the entry, and resets an invalid `exiftoolPATH` in `config.ini` to `null`. Uninstall removes the PATH entry only when that marker is present. The installer requires Inno Setup 7 because it uses `ArchiveExtraction=full` and `ExtractArchive`.
+
+The GitHub workflows install the pinned Inno Setup 7.1.1 x64 release into the runner before building.
 
 ## Icon and manifest resources
 

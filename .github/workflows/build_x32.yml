@@ -31,18 +31,32 @@ jobs:
           }
           "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Install Inno Setup
+      - name: Install Inno Setup 7
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $candidates = @(
-            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
-            "C:\Program Files\Inno Setup 6\ISCC.exe"
+          $roots = @(
+            (Join-Path $env:LOCALAPPDATA "Programs"),
+            ${env:ProgramFiles(x86)},
+            $env:ProgramFiles
           )
-          $iscc = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $iscc) {
-            choco install innosetup -y --no-progress
-            if ($LASTEXITCODE -ne 0) { throw "choco install innosetup failed" }
+          $found = $false
+          foreach ($root in $roots) {
+            if (-not $root -or -not (Test-Path -LiteralPath $root)) { continue }
+            $dirs = Get-ChildItem -LiteralPath $root -Directory -Filter "Inno Setup 7*" -ErrorAction SilentlyContinue
+            foreach ($dir in $dirs) {
+              if (Test-Path -LiteralPath (Join-Path $dir.FullName "ISCC.exe")) {
+                $found = $true
+                break
+              }
+            }
+            if ($found) { break }
+          }
+          if (-not $found) {
+            $installer = Join-Path $env:RUNNER_TEMP "innosetup-7.1.1-x64.exe"
+            Invoke-WebRequest -Uri "https://github.com/jrsoftware/issrc/releases/download/is-7_1_1/innosetup-7.1.1-x64.exe" -OutFile $installer
+            $proc = Start-Process -FilePath $installer -ArgumentList @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") -Wait -PassThru
+            if ($proc.ExitCode -ne 0) { throw "Inno Setup install failed with exit code $($proc.ExitCode)" }
           }
 
       - name: Build x32

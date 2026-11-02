@@ -4,9 +4,9 @@ ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). 
 
 ## Install
 
-Run `dist\v0.2.0_installer_x64.exe` on 64-bit Windows or `dist\v0.2.0_installer_x86.exe` on 32-bit Windows. Both install the same app; install one. The installer uses a dark wizard, shows the MIT license, and checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool before installing. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
+Run `dist\v<version>_installer_x64.exe` on 64-bit Windows or `dist\v<version>_installer_x86.exe` on 32-bit Windows. Both install the same app; install one. The installer uses a dark wizard, shows the MIT license, and checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool before installing. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
-The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, adds an entry to Settings > Apps as ETSU, and lets you continue if ExifTool is missing. Uninstall from Settings > Apps.
+If ExifTool is not found, the installer offers to download ExifTool 13.60 from SourceForge, verify its SHA-256 checksum, install it beside `etsu.exe`, and add the install folder to your user PATH. You can skip that task and install ExifTool later. The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, and adds an entry to Settings > Apps as ETSU. Uninstall from Settings > Apps.
 
 ## Use
 
@@ -37,7 +37,7 @@ Run the regression suite with:
 .\test.ps1
 ```
 
-To build, install .NET Framework 4.5 or later and Inno Setup 6 or later. See [Development](docs/development.md) for the source layout, build steps, and release workflow.
+To build, install .NET Framework 4.5 or later and Inno Setup 7 or later. See [Development](docs/development.md) for the source layout, build steps, and release workflow.
 
 ## License
 

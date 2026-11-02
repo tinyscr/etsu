@@ -18,6 +18,11 @@ $icon = Join-Path $src "Assets\icon.ico"
 $manifest = Join-Path $src "Assets\etsu.manifest"
 $iss = Join-Path $src "Installer\etsu.iss"
 $exe = Join-Path $bin "etsu.exe"
+$exifToolVersion = "13.60"
+$exifToolHashes = @{
+    "x64" = "548b1f4e0b713cd2a26824b34080c35db4e2d2edd166468eb38b1d55ada90c2e"
+    "x86" = "4f8d21d39d96518af4be645e486bab11797269b4da357e08809276886bb098a4"
+}
 
 function Fail([string]$Message) {
     throw $Message
@@ -80,7 +85,7 @@ function Find-Iscc {
             }
         }
     }
-    Fail "Inno Setup not found. Install it with: winget install JRSoftware.InnoSetup --scope user"
+    Fail "Inno Setup 7 or later not found. Install it with: winget install JRSoftware.InnoSetup.7 --scope user"
 }
 
 if (-not (Test-Path -LiteralPath $versionPath)) {
@@ -92,6 +97,10 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     Fail "version must contain three numeric parts, for example 0.2.0."
 }
 $Architecture = $Architecture.ToLowerInvariant()
+$exifToolHash = $exifToolHashes[$Architecture]
+if (-not $exifToolHash) {
+    Fail "No ExifTool checksum configured for $Architecture."
+}
 
 $csc = Find-Csc
 $iscc = $null
@@ -164,7 +173,7 @@ if ($actualMachine -ne $expectedMachine) {
 if (-not $NoInstaller) {
     Write-Host "Building installer..."
     $archDefine = if ($Architecture -eq "x64") { "/DArchX64" } else { "/DArchX86" }
-    & $iscc "/DAppVersion=$Version" "/DAppArchitecture=$Architecture" $archDefine $iss
+    & $iscc "/DAppVersion=$Version" "/DAppArchitecture=$Architecture" "/DExifToolVersion=$exifToolVersion" "/DExifToolHash=$exifToolHash" $archDefine $iss
     if ($LASTEXITCODE -ne 0) {
         Fail "Inno Setup failed with exit code $LASTEXITCODE."
     }
