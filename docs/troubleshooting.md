@@ -4,7 +4,7 @@
 
 Open a terminal and run `exiftool -ver`. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` next to `etsu.exe`. On 32-bit Windows, use a 32-bit ExifTool build.
 
-If you skipped the ExifTool task during Setup, run Setup again or install ExifTool manually. Setup only offers the task when ExifTool is not already found. When accepted, it downloads ExifTool 13.60, verifies the SHA-256 checksum, extracts it beside `etsu.exe`, and adds the install folder to your user PATH. It never needs administrator rights.
+If you chose manual installation during Setup, run Setup again or install ExifTool manually. Setup only shows the choice when ExifTool is not already found. When you choose download, it fetches ExifTool 13.60 from SourceForge, verifies the SHA-256 checksum, extracts it beside `etsu.exe`, and adds the install folder to your user PATH. It never needs administrator rights.
 
 If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `<install>\config.ini`. The default location is `%LOCALAPPDATA%\Programs\ETSU\config.ini`. After a successful installer download, Setup resets an invalid value to `null` automatically.
 

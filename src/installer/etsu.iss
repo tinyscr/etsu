@@ -53,7 +53,6 @@ SolidCompression=yes
 WizardStyle=modern dark includetitlebar
 ArchiveExtraction=full
 ChangesEnvironment=yes
-UsePreviousTasks=no
 #ifdef ArchX64
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -68,9 +67,6 @@ VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
 SetupIconFile=..\Assets\icon.ico
-
-[Tasks]
-Name: "exiftool"; Description: "Download and install ExifTool (about 11 MB)"; GroupDescription: "ExifTool:"; Check: ExifToolMissing
 
 [Files]
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
@@ -116,10 +112,80 @@ const
 var
   CheckProgressPage: TOutputProgressWizardPage;
   DownloadPage: TDownloadWizardPage;
+  ExifToolPage: TWizardPage;
+  ExifToolYesCheck, ExifToolNoCheck: TNewCheckBox;
+  ExifToolInstallSelected: Boolean;
   ExifToolInstalled: Boolean;
+
+procedure ExifToolYesClick(Sender: TObject);
+begin
+  if ExifToolYesCheck.Checked then
+  begin
+    ExifToolNoCheck.Checked := False;
+    ExifToolInstallSelected := True;
+  end
+  else
+    ExifToolYesCheck.Checked := True;
+end;
+
+procedure ExifToolNoClick(Sender: TObject);
+begin
+  if ExifToolNoCheck.Checked then
+  begin
+    ExifToolYesCheck.Checked := False;
+    ExifToolInstallSelected := False;
+  end
+  else
+    ExifToolNoCheck.Checked := True;
+end;
+
+procedure CreateExifToolPage;
+var
+  IntroText, ManualText: TNewStaticText;
+begin
+  ExifToolPage := CreateCustomPage(wpSelectDir, 'ExifTool', 'Choose how ETSU should get ExifTool.');
+
+  IntroText := TNewStaticText.Create(ExifToolPage);
+  IntroText.Parent := ExifToolPage.Surface;
+  IntroText.AutoSize := False;
+  IntroText.WordWrap := True;
+  IntroText.Width := ExifToolPage.SurfaceWidth;
+  IntroText.Caption := 'ETSU uses ExifTool to read and write metadata. Setup can download ExifTool 13.60 (about 11 MB) from SourceForge at downloads.sourceforge.net/project/exiftool/ and install it beside etsu.exe. Setup verifies the package with a pinned SHA-256 checksum and adds the ETSU folder to your user PATH.';
+  IntroText.AdjustHeight;
+
+  ManualText := TNewStaticText.Create(ExifToolPage);
+  ManualText.Parent := ExifToolPage.Surface;
+  ManualText.Top := IntroText.Top + IntroText.Height + ScaleY(8);
+  ManualText.AutoSize := False;
+  ManualText.WordWrap := True;
+  ManualText.Width := ExifToolPage.SurfaceWidth;
+  ManualText.Caption := 'If you choose manual installation, ETSU will be installed without ExifTool. Install ExifTool from exiftool.org or set exiftoolPATH in config.ini before using metadata actions.';
+  ManualText.AdjustHeight;
+
+  ExifToolYesCheck := TNewCheckBox.Create(ExifToolPage);
+  ExifToolYesCheck.Parent := ExifToolPage.Surface;
+  ExifToolYesCheck.Top := ManualText.Top + ManualText.Height + ScaleY(16);
+  ExifToolYesCheck.Width := ExifToolPage.SurfaceWidth;
+  ExifToolYesCheck.Height := ScaleY(17);
+  ExifToolYesCheck.Caption := 'Yes, download and install ExifTool 13.60 (about 11 MB).';
+  ExifToolYesCheck.Checked := True;
+  ExifToolYesCheck.OnClick := @ExifToolYesClick;
+
+  ExifToolNoCheck := TNewCheckBox.Create(ExifToolPage);
+  ExifToolNoCheck.Parent := ExifToolPage.Surface;
+  ExifToolNoCheck.Top := ExifToolYesCheck.Top + ExifToolYesCheck.Height + ScaleY(8);
+  ExifToolNoCheck.Width := ExifToolPage.SurfaceWidth;
+  ExifToolNoCheck.Height := ScaleY(17);
+  ExifToolNoCheck.Caption := 'No, I will install ExifTool manually.';
+  ExifToolNoCheck.OnClick := @ExifToolNoClick;
+
+  ExifToolInstallSelected := True;
+end;
 
 procedure InitializeWizard;
 begin
+  CreateExifToolPage;
+
   CheckProgressPage := CreateOutputProgressPage(
     'Checking prerequisites',
     'Setup is checking the tools ETSU needs before installing.');
@@ -192,6 +258,14 @@ begin
   Result := ExifToolLocation() = '';
 end;
 
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  if PageID = ExifToolPage.ID then
+    Result := not ExifToolMissing()
+  else
+    Result := False;
+end;
+
 function ShouldInstallExifTool(): Boolean;
 begin
   Result := ExifToolInstalled;
@@ -250,7 +324,7 @@ begin
     ExifPath := ExifToolLocation();
     if ExifPath <> '' then
       CheckProgressPage.SetText('Checking ExifTool...', ExifPath)
-    else if WizardIsTaskSelected('exiftool') then
+    else if ExifToolInstallSelected then
       CheckProgressPage.SetText('Checking ExifTool...', 'Not found; will download and install.')
     else
       CheckProgressPage.SetText('Checking ExifTool...', 'Not found (optional).');
@@ -272,17 +346,6 @@ begin
   if CscPath = '' then
     MsgBox('csc.exe was not found. This is only needed to build ETSU from source; the installed app will still run.' + #13#10 + #13#10 +
            'If you plan to build from source, install .NET Framework 4.5 or later.', mbInformation, MB_OK);
-
-  if (ExifPath = '') and (not WizardIsTaskSelected('exiftool')) then
-  begin
-    if MsgBox('ExifTool was not found on PATH or in the ETSU folder.' + #13#10 + #13#10 +
-              'ETSU can still be installed, but metadata operations need ExifTool. Install it later or set exiftoolPATH in config.ini.' + #13#10 + #13#10 +
-              'Continue?', mbConfirmation, MB_YESNO) = IDNO then
-    begin
-      Result := 'Setup stopped because ExifTool was not found.';
-      Exit;
-    end;
-  end;
 end;
 
 function NormalizePathEntry(const Value: string): string;
@@ -500,7 +563,7 @@ var
 begin
   if CurStep = ssInstall then
   begin
-    if WizardIsTaskSelected('exiftool') then
+    if ExifToolInstallSelected and ExifToolMissing() then
     begin
       while not InstallExifTool(Error, Aborted) do
       begin
