@@ -175,10 +175,10 @@ begin
   InfoText.Parent := ExifToolPage.Surface;
   InfoText.AutoSize := False;
   InfoText.Width := ExifToolPage.SurfaceWidth;
-  InfoText.Caption := 'ETSU requires ExifTool to read and write metadata. Setup can download ExifTool 13.60 (about 11 MB) from ' +
-    '<a href="https://downloads.sourceforge.net/project/exiftool/">SourceForge</a> and install it beside etsu.exe. ' +
-    'Or install it yourself from <a href="https://exiftool.org/">exiftool.org</a>. ' +
-    'ETSU will not be installed unless ExifTool is found.';
+  InfoText.Caption := 'Setup can download ExifTool 13.60 (about 11 MB) from ' +
+    '<a href="https://downloads.sourceforge.net/project/exiftool/">SourceForge</a> and install it beside etsu.exe, ' +
+    'or you can install it from <a href="https://exiftool.org/">exiftool.org</a>. ' +
+    'ETSU will not be installed unless ExifTool is found or Setup installs it.';
   InfoText.OnLinkClick := @LinkLabelOnLinkClick;
   InfoText.AdjustHeight;
 
