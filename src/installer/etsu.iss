@@ -116,30 +116,45 @@ var
   DownloadPage: TDownloadWizardPage;
   ExifToolPage: TWizardPage;
   ExifToolYesCheck, ExifToolNoCheck: TNewCheckBox;
+  ExifToolChoiceUpdating: Boolean;
   ExifToolInstallSelected: Boolean;
   ExifToolInstalled: Boolean;
   UninstallExifTool: Boolean;
 
 procedure ExifToolYesClick(Sender: TObject);
 begin
-  if ExifToolYesCheck.Checked then
-  begin
-    ExifToolNoCheck.Checked := False;
-    ExifToolInstallSelected := True;
-  end
-  else
-    ExifToolYesCheck.Checked := True;
+  if ExifToolChoiceUpdating then
+    Exit;
+  ExifToolChoiceUpdating := True;
+  try
+    if ExifToolYesCheck.Checked then
+    begin
+      ExifToolNoCheck.Checked := False;
+      ExifToolInstallSelected := True;
+    end
+    else
+      ExifToolYesCheck.Checked := True;
+  finally
+    ExifToolChoiceUpdating := False;
+  end;
 end;
 
 procedure ExifToolNoClick(Sender: TObject);
 begin
-  if ExifToolNoCheck.Checked then
-  begin
-    ExifToolYesCheck.Checked := False;
-    ExifToolInstallSelected := False;
-  end
-  else
-    ExifToolNoCheck.Checked := True;
+  if ExifToolChoiceUpdating then
+    Exit;
+  ExifToolChoiceUpdating := True;
+  try
+    if ExifToolNoCheck.Checked then
+    begin
+      ExifToolYesCheck.Checked := False;
+      ExifToolInstallSelected := False;
+    end
+    else
+      ExifToolNoCheck.Checked := True;
+  finally
+    ExifToolChoiceUpdating := False;
+  end;
 end;
 
 procedure CreateExifToolPage;
