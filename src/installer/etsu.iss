@@ -137,6 +137,7 @@ begin
   finally
     ExifToolChoiceUpdating := False;
   end;
+  WizardForm.NextButton.Enabled := True;
 end;
 
 procedure ExifToolNoClick(Sender: TObject);
@@ -155,6 +156,7 @@ begin
   finally
     ExifToolChoiceUpdating := False;
   end;
+  WizardForm.NextButton.Enabled := False;
 end;
 
 procedure LinkLabelOnLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
@@ -291,15 +293,10 @@ begin
   Result := ExifToolInstalled;
 end;
 
-function NextButtonClick(CurPageID: Integer): Boolean;
+procedure CurPageChanged(CurPageID: Integer);
 begin
-  Result := True;
-  if (CurPageID = ExifToolPage.ID) and (not ExifToolInstallSelected) then
-  begin
-    MsgBox('ETSU requires ExifTool. Install it from exiftool.org, then run Setup again.',
-      mbInformation, MB_OK);
-    Result := False;
-  end;
+  if CurPageID = ExifToolPage.ID then
+    WizardForm.NextButton.Enabled := ExifToolInstallSelected;
 end;
 
 function CscLocation(): string;
