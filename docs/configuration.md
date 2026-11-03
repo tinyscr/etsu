@@ -69,7 +69,7 @@ A successful run deletes the `.bak` file. ETSU does not automatically restore th
 
 ## ExifTool
 
-ETSU does not bundle ExifTool. The installer can download ExifTool 13.60 from SourceForge (`downloads.sourceforge.net/project/exiftool/`), verify its SHA-256 checksum, extract it into the install directory, and add that directory to the current user's PATH. The choice page appears only when ExifTool is not already found, and the download option is selected by default. Choose manual installation and use one of these options instead:
+ETSU does not bundle ExifTool. The installer can download ExifTool 13.60 from SourceForge (`downloads.sourceforge.net/project/exiftool/`), verify its SHA-256 checksum, extract it into the install directory, and add that directory to the current user's PATH. The page appears only when ExifTool is not already found, and the download option is selected by default. ETSU does not install unless ExifTool is found or downloaded. Choose manual installation to stop and install ExifTool yourself, then run Setup again. Use one of these options instead:
 
 1. Set `exiftoolPATH` to the full path of `exiftool.exe`.
 2. Put `exiftool.exe` on PATH.

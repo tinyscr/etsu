@@ -157,32 +157,34 @@ begin
   end;
 end;
 
+procedure LinkLabelOnLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
+var
+  ErrorCode: Integer;
+begin
+  if LinkType = sltURL then
+    ShellExecAsOriginalUser('open', Link, '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+end;
+
 procedure CreateExifToolPage;
 var
-  IntroText, ManualText: TNewStaticText;
+  InfoText: TNewLinkLabel;
 begin
-  ExifToolPage := CreateCustomPage(wpSelectDir, 'ExifTool', 'Choose how ETSU should get ExifTool.');
+  ExifToolPage := CreateCustomPage(wpSelectDir, 'ExifTool', 'ExifTool was not found.');
 
-  IntroText := TNewStaticText.Create(ExifToolPage);
-  IntroText.Parent := ExifToolPage.Surface;
-  IntroText.AutoSize := False;
-  IntroText.WordWrap := True;
-  IntroText.Width := ExifToolPage.SurfaceWidth;
-  IntroText.Caption := 'ETSU uses ExifTool to read and write metadata. Setup can download ExifTool 13.60 (about 11 MB) from SourceForge at downloads.sourceforge.net/project/exiftool/ and install it beside etsu.exe. Setup verifies the package with a pinned SHA-256 checksum and adds the ETSU folder to your user PATH.';
-  IntroText.AdjustHeight;
-
-  ManualText := TNewStaticText.Create(ExifToolPage);
-  ManualText.Parent := ExifToolPage.Surface;
-  ManualText.Top := IntroText.Top + IntroText.Height + ScaleY(8);
-  ManualText.AutoSize := False;
-  ManualText.WordWrap := True;
-  ManualText.Width := ExifToolPage.SurfaceWidth;
-  ManualText.Caption := 'If you choose manual installation, ETSU will be installed without ExifTool. Install ExifTool from exiftool.org or set exiftoolPATH in config.ini before using metadata actions.';
-  ManualText.AdjustHeight;
+  InfoText := TNewLinkLabel.Create(ExifToolPage);
+  InfoText.Parent := ExifToolPage.Surface;
+  InfoText.AutoSize := False;
+  InfoText.Width := ExifToolPage.SurfaceWidth;
+  InfoText.Caption := 'ETSU requires ExifTool to read and write metadata. Setup can download ExifTool 13.60 (about 11 MB) from ' +
+    '<a href="https://downloads.sourceforge.net/project/exiftool/">SourceForge</a> and install it beside etsu.exe. ' +
+    'Or install it yourself from <a href="https://exiftool.org/">exiftool.org</a>. ' +
+    'ETSU will not be installed unless ExifTool is found.';
+  InfoText.OnLinkClick := @LinkLabelOnLinkClick;
+  InfoText.AdjustHeight;
 
   ExifToolYesCheck := TNewCheckBox.Create(ExifToolPage);
   ExifToolYesCheck.Parent := ExifToolPage.Surface;
-  ExifToolYesCheck.Top := ManualText.Top + ManualText.Height + ScaleY(16);
+  ExifToolYesCheck.Top := InfoText.Top + InfoText.Height + ScaleY(16);
   ExifToolYesCheck.Width := ExifToolPage.SurfaceWidth;
   ExifToolYesCheck.Height := ScaleY(17);
   ExifToolYesCheck.Caption := 'Yes, download and install ExifTool 13.60 (about 11 MB).';
@@ -194,7 +196,7 @@ begin
   ExifToolNoCheck.Top := ExifToolYesCheck.Top + ExifToolYesCheck.Height + ScaleY(8);
   ExifToolNoCheck.Width := ExifToolPage.SurfaceWidth;
   ExifToolNoCheck.Height := ScaleY(17);
-  ExifToolNoCheck.Caption := 'No, I will install ExifTool manually.';
+  ExifToolNoCheck.Caption := 'No, I will install ExifTool manually and run Setup again.';
   ExifToolNoCheck.OnClick := @ExifToolNoClick;
 
   ExifToolInstallSelected := True;
@@ -289,6 +291,17 @@ begin
   Result := ExifToolInstalled;
 end;
 
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  if (CurPageID = ExifToolPage.ID) and (not ExifToolInstallSelected) then
+  begin
+    MsgBox('ETSU requires ExifTool. Install it from exiftool.org, then run Setup again.',
+      mbInformation, MB_OK);
+    Result := False;
+  end;
+end;
+
 function CscLocation(): string;
 var
   Candidate: string;
@@ -345,7 +358,7 @@ begin
     else if ExifToolInstallSelected then
       CheckProgressPage.SetText('Checking ExifTool...', 'Not found; will download and install.')
     else
-      CheckProgressPage.SetText('Checking ExifTool...', 'Not found (optional).');
+      CheckProgressPage.SetText('Checking ExifTool...', 'Not found (required).');
     Sleep(200);
 
     CheckProgressPage.SetText('Prerequisite checks complete.', '');
@@ -358,6 +371,12 @@ begin
   if not DotNetOK then
   begin
     Result := 'ETSU requires .NET Framework 4.5 or later. Install it, then run Setup again.';
+    Exit;
+  end;
+
+  if (ExifPath = '') and (not ExifToolInstallSelected) then
+  begin
+    Result := 'ETSU requires ExifTool. Install it from exiftool.org, then run Setup again.';
     Exit;
   end;
 
@@ -590,15 +609,13 @@ begin
       begin
         if Aborted then
           Abort;
-        case MsgBox('ExifTool could not be installed.' + #13#10 + #13#10 +
+        case MsgBox('ExifTool could not be installed. ETSU requires ExifTool.' + #13#10 + #13#10 +
                     Error + #13#10 + #13#10 +
-                    'Retry? Yes = retry, No = continue without ExifTool, Cancel = stop Setup.',
-                    mbError, MB_YESNOCANCEL) of
-          IDYES:
+                    'Retry?',
+                    mbError, MB_RETRYCANCEL) of
+          IDRETRY:
             begin
             end;
-          IDNO:
-            Break;
           IDCANCEL:
             Abort;
         end;

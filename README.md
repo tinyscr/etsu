@@ -6,7 +6,7 @@ ETSU reads, cleans, and sets file dates with [ExifTool](https://exiftool.org/). 
 
 Run `dist\v<version>_installer_x64.exe` on 64-bit Windows or `dist\v<version>_installer_x86.exe` on 32-bit Windows. Both install the same app; install one. The installer uses a dark wizard, shows the MIT license, and checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool before installing. It installs under `%LOCALAPPDATA%\Programs\ETSU` by default and does not request administrator rights.
 
-If ExifTool is not found, the installer shows two choices: download ExifTool 13.60 from SourceForge, or install it manually. The download option is selected by default. Setup verifies the package with a pinned SHA-256 checksum, installs it beside `etsu.exe`, and adds the install folder to your user PATH. The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, and adds an entry to Settings > Apps as ETSU. Uninstall from Settings > Apps. The uninstaller asks whether to remove ExifTool, checked by default.
+If ExifTool is not found, Setup says so and offers to download ExifTool 13.60 from SourceForge, selected by default. ETSU will not install unless ExifTool is found or downloaded. The other choice is to install ExifTool manually and run Setup again. Setup verifies the package with a pinned SHA-256 checksum, installs it beside `etsu.exe`, and adds the install folder to your user PATH. The installer copies `etsu.exe`, creates `config.ini` in the install directory when missing, registers the ETSU submenu for files, and adds an entry to Settings > Apps as ETSU. Uninstall from Settings > Apps. The uninstaller asks whether to remove ExifTool, checked by default.
 
 ## Use
 

@@ -4,7 +4,7 @@
 
 Open a terminal and run `exiftool -ver`. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` next to `etsu.exe`. On 32-bit Windows, use a 32-bit ExifTool build.
 
-If you chose manual installation during Setup, run Setup again or install ExifTool manually. Setup only shows the choice when ExifTool is not already found. When you choose download, it fetches ExifTool 13.60 from SourceForge, verifies the SHA-256 checksum, extracts it beside `etsu.exe`, and adds the install folder to your user PATH. It never needs administrator rights.
+Setup does not install ETSU while ExifTool is missing. If you chose manual installation, install ExifTool from [exiftool.org](https://exiftool.org/), then run Setup again. Setup only shows the ExifTool page when ExifTool is not already found. When you choose download, it fetches ExifTool 13.60 from SourceForge, verifies the SHA-256 checksum, extracts it beside `etsu.exe`, and adds the install folder to your user PATH. It never needs administrator rights.
 
 If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `<install>\config.ini`. The default location is `%LOCALAPPDATA%\Programs\ETSU\config.ini`. After a successful installer download, Setup resets an invalid value to `null` automatically.
 
@@ -12,7 +12,7 @@ If you just changed PATH, restart Explorer or sign out and back in so new action
 
 ## The installer cannot download ExifTool
 
-Setup offers Retry, Continue without ExifTool, or Cancel. Check the internet connection, proxy settings, and access to SourceForge, then retry. You can also continue without it and install ExifTool later from [exiftool.org](https://exiftool.org/).
+Setup offers Retry or Cancel and does not continue without ExifTool. Check the internet connection, proxy settings, and access to SourceForge, then retry. You can also cancel, install ExifTool from [exiftool.org](https://exiftool.org/), and run Setup again.
 
 ## The Explorer menu is missing
 
