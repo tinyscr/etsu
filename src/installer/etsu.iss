@@ -71,7 +71,8 @@ SetupIconFile=..\Assets\icon.ico
 [Files]
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "default.ini"; DestDir: "{app}"; DestName: "config.ini"; Flags: onlyifdoesntexist
-Source: "{tmp}\{#ExifToolBaseName}\*"; DestDir: "{app}"; Flags: external skipifsourcedoesntexist recursesubdirs ignoreversion; Check: ShouldInstallExifTool
+Source: "{tmp}\{#ExifToolBaseName}\exiftool.exe"; DestDir: "{app}"; Flags: external skipifsourcedoesntexist ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
+Source: "{tmp}\{#ExifToolBaseName}\exiftool_files\*"; DestDir: "{app}\exiftool_files"; Flags: external skipifsourcedoesntexist recursesubdirs ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
 
 [Dirs]
 Name: "{app}\logs\etsu"
@@ -108,6 +109,7 @@ const
   EnvironmentKey = 'Environment';
   AppRegistryKey = 'Software\TinyScripts\ETSU';
   ExifToolPathMarker = 'ExifToolPathAdded';
+  ExifToolFilesMarker = 'ExifToolFilesInstalled';
 
 var
   CheckProgressPage: TOutputProgressWizardPage;
@@ -116,6 +118,7 @@ var
   ExifToolYesCheck, ExifToolNoCheck: TNewCheckBox;
   ExifToolInstallSelected: Boolean;
   ExifToolInstalled: Boolean;
+  UninstallExifTool: Boolean;
 
 procedure ExifToolYesClick(Sender: TObject);
 begin
@@ -527,6 +530,9 @@ begin
     Exit;
   end;
 
+  if not RegWriteDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, 1) then
+    Log('Could not record that Setup installed ExifTool.');
+
   ConfigPath := AddBackslash(AppDir) + 'config.ini';
   Configured := GetIniString('General', 'exiftoolPATH', 'null', ConfigPath);
   if (CompareText(Configured, 'null') <> 0) and (not FileExists(Configured)) then
@@ -588,12 +594,124 @@ begin
     FinishExifToolInstall;
 end;
 
+function InitializeUninstall: Boolean;
+begin
+  UninstallExifTool := True;
+  Result := True;
+end;
+
+procedure RemoveExifToolFiles;
+var
+  AppDir, ExePath, FilesDir: string;
+begin
+  AppDir := ExpandConstant('{app}');
+  ExePath := AddBackslash(AppDir) + 'exiftool.exe';
+  FilesDir := AddBackslash(AppDir) + 'exiftool_files';
+  if FileExists(ExePath) and (not DeleteFile(ExePath)) then
+    Log('Could not delete exiftool.exe.');
+  if DirExists(FilesDir) and (not DelTree(FilesDir, True, True, True)) then
+    Log('Could not delete exiftool_files.');
+end;
+
+procedure InitializeUninstallProgressForm;
+var
+  Marker: Cardinal;
+  UninstallPage: TNewNotebookPage;
+  UninstallButton: TNewButton;
+  ExifToolCheckbox: TNewCheckBox;
+  InfoText: TNewStaticText;
+  OriginalPageNameLabel, OriginalPageDescriptionLabel: string;
+  OriginalCancelButtonEnabled: Boolean;
+  OriginalCancelButtonModalResult: Integer;
+  ctrl: TWinControl;
+begin
+  UninstallExifTool := True;
+  if UninstallSilent then
+    Exit;
+  if not RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, Marker) or (Marker = 0) then
+    Exit;
+  if not FileExists(ExpandConstant('{app}\exiftool.exe')) then
+    Exit;
+
+  ctrl := UninstallProgressForm.StatusLabel;
+
+  UninstallButton := TNewButton.Create(UninstallProgressForm);
+  UninstallButton.Parent := UninstallProgressForm;
+  UninstallButton.Left := UninstallProgressForm.CancelButton.Left - UninstallProgressForm.CancelButton.Width - ScaleX(10);
+  UninstallButton.Top := UninstallProgressForm.CancelButton.Top;
+  UninstallButton.Width := UninstallProgressForm.CancelButton.Width;
+  UninstallButton.Height := UninstallProgressForm.CancelButton.Height;
+  UninstallButton.TabOrder := UninstallProgressForm.CancelButton.TabOrder;
+  UninstallButton.Caption := 'Uninstall';
+  UninstallButton.ModalResult := mrOK;
+  UninstallButton.Default := True;
+  UninstallProgressForm.CancelButton.TabOrder := UninstallButton.TabOrder + 1;
+
+  UninstallPage := TNewNotebookPage.Create(UninstallProgressForm);
+  UninstallPage.Notebook := UninstallProgressForm.InnerNotebook;
+  UninstallPage.Parent := UninstallProgressForm.InnerNotebook;
+  UninstallPage.Align := alClient;
+  UninstallProgressForm.InnerNotebook.ActivePage := UninstallPage;
+
+  InfoText := TNewStaticText.Create(UninstallProgressForm);
+  InfoText.Parent := UninstallPage;
+  InfoText.Left := ctrl.Left;
+  InfoText.Top := ctrl.Top;
+  InfoText.Width := ctrl.Width;
+  InfoText.AutoSize := False;
+  InfoText.WordWrap := True;
+  InfoText.Caption := 'Setup installed ExifTool in:' + #13#10 +
+    ExpandConstant('{app}') + #13#10#13#10 +
+    'ETSU will be uninstalled. Leave the option below checked to remove ExifTool and its PATH entry, or clear it to keep them.';
+  InfoText.AdjustHeight;
+
+  ExifToolCheckbox := TNewCheckBox.Create(UninstallProgressForm);
+  ExifToolCheckbox.Parent := UninstallPage;
+  ExifToolCheckbox.Left := ctrl.Left;
+  ExifToolCheckbox.Top := InfoText.Top + InfoText.Height + ScaleY(16);
+  ExifToolCheckbox.Width := ctrl.Width;
+  ExifToolCheckbox.Height := ScaleY(17);
+  ExifToolCheckbox.Caption := 'Uninstall ExifTool (recommended)';
+  ExifToolCheckbox.Checked := True;
+
+  OriginalPageNameLabel := UninstallProgressForm.PageNameLabel.Caption;
+  OriginalPageDescriptionLabel := UninstallProgressForm.PageDescriptionLabel.Caption;
+  OriginalCancelButtonEnabled := UninstallProgressForm.CancelButton.Enabled;
+  OriginalCancelButtonModalResult := UninstallProgressForm.CancelButton.ModalResult;
+
+  UninstallProgressForm.PageNameLabel.Caption := 'Uninstall ETSU';
+  UninstallProgressForm.PageDescriptionLabel.Caption := 'Choose whether to remove ExifTool.';
+  UninstallProgressForm.CancelButton.Enabled := True;
+  UninstallProgressForm.CancelButton.ModalResult := mrCancel;
+
+  if UninstallProgressForm.ShowModal <> mrOK then
+    Abort;
+
+  UninstallExifTool := ExifToolCheckbox.Checked;
+  UninstallButton.Visible := False;
+  UninstallProgressForm.PageNameLabel.Caption := OriginalPageNameLabel;
+  UninstallProgressForm.PageDescriptionLabel.Caption := OriginalPageDescriptionLabel;
+  UninstallProgressForm.CancelButton.Enabled := OriginalCancelButtonEnabled;
+  UninstallProgressForm.CancelButton.ModalResult := OriginalCancelButtonModalResult;
+  UninstallProgressForm.InnerNotebook.ActivePage := UninstallProgressForm.InstallingPage;
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Marker: Cardinal;
 begin
   if CurUninstallStep <> usUninstall then
     Exit;
+
+  if not UninstallExifTool then
+    Exit;
+
+  if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, Marker) and (Marker <> 0) then
+  begin
+    RemoveExifToolFiles;
+    if not RegDeleteValue(HKCU, AppRegistryKey, ExifToolFilesMarker) then
+      Log('Could not remove the ExifTool files marker.');
+  end;
 
   if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolPathMarker, Marker) and (Marker <> 0) then
   begin
