@@ -7,6 +7,7 @@ namespace Etsu.App
     public static class AppPaths
     {
         public static string BaseDir { get; private set; }
+        public static string RootDir { get; private set; }
 
         public static string ConfigPath
         {
@@ -15,12 +16,12 @@ namespace Etsu.App
 
         public static string LogDir
         {
-            get { return Path.Combine(RequireBaseDir(), "logs", "etsu"); }
+            get { return Path.Combine(RequireRootDir(), "logs"); }
         }
 
         public static string TempDir
         {
-            get { return Path.Combine(RequireBaseDir(), "tmp"); }
+            get { return Path.Combine(RequireRootDir(), "tmp"); }
         }
 
         public static void Init()
@@ -33,6 +34,7 @@ namespace Etsu.App
             }
 
             BaseDir = baseDir;
+            RootDir = ResolveRootDir(baseDir);
             Directory.CreateDirectory(LogDir);
             Directory.CreateDirectory(TempDir);
 
@@ -43,6 +45,20 @@ namespace Etsu.App
             File.Delete(probe);
         }
 
+        internal static string ResolveRootDir(string baseDir)
+        {
+            if (string.Equals(Path.GetFileName(baseDir), "bin", StringComparison.OrdinalIgnoreCase))
+            {
+                string parent = Path.GetDirectoryName(baseDir);
+                if (!string.IsNullOrEmpty(parent))
+                {
+                    return parent;
+                }
+            }
+
+            return baseDir;
+        }
+
         private static string RequireBaseDir()
         {
             if (string.IsNullOrEmpty(BaseDir))
@@ -50,6 +66,15 @@ namespace Etsu.App
                 throw new InvalidOperationException("AppPaths.Init must be called first.");
             }
             return BaseDir;
+        }
+
+        private static string RequireRootDir()
+        {
+            if (string.IsNullOrEmpty(RootDir))
+            {
+                throw new InvalidOperationException("AppPaths.Init must be called first.");
+            }
+            return RootDir;
         }
     }
 }

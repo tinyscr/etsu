@@ -58,11 +58,19 @@ namespace Etsu.Tests
             AppPaths.Init();
 
             TestSupport.Check(!string.IsNullOrEmpty(AppPaths.BaseDir), "BaseDir is set");
+            TestSupport.Check(!string.IsNullOrEmpty(AppPaths.RootDir), "RootDir is set");
+            TestSupport.Check(AppPaths.RootDir == AppPaths.BaseDir, "RootDir for test binary");
             TestSupport.Check(AppPaths.ConfigPath == Path.Combine(AppPaths.BaseDir, "config.ini"), "ConfigPath");
-            TestSupport.Check(AppPaths.LogDir == Path.Combine(AppPaths.BaseDir, "logs", "etsu"), "LogDir");
-            TestSupport.Check(AppPaths.TempDir == Path.Combine(AppPaths.BaseDir, "tmp"), "TempDir");
+            TestSupport.Check(AppPaths.LogDir == Path.Combine(AppPaths.RootDir, "logs"), "LogDir");
+            TestSupport.Check(AppPaths.TempDir == Path.Combine(AppPaths.RootDir, "tmp"), "TempDir");
             TestSupport.Check(Directory.Exists(AppPaths.LogDir), "LogDir exists");
             TestSupport.Check(Directory.Exists(AppPaths.TempDir), "TempDir exists");
+            TestSupport.Check(
+                AppPaths.ResolveRootDir(@"C:\Programs\ETSU\bin") == @"C:\Programs\ETSU",
+                "RootDir for bin layout");
+            TestSupport.Check(
+                AppPaths.ResolveRootDir(@"C:\Programs\ETSU") == @"C:\Programs\ETSU",
+                "RootDir for flat layout");
 
             string probe = Path.Combine(AppPaths.TempDir, ".test-" + Guid.NewGuid().ToString("N"));
             using (File.Create(probe))

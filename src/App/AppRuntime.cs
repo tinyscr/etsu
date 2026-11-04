@@ -52,7 +52,7 @@ namespace Etsu.App
                 return true;
             }
 
-            string local = Path.Combine(AppPaths.BaseDir, "exiftool.exe");
+            string local = Path.Combine(AppPaths.RootDir, "exiftool", "exiftool.exe");
             if (File.Exists(local))
             {
                 ExifPath = local;

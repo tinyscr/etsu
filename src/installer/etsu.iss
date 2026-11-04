@@ -62,20 +62,24 @@ ArchitecturesAllowed=x86compatible
 #error Pass /DArchX64 or /DArchX86.
 #endif
 UninstallDisplayName={#AppName}
-UninstallDisplayIcon={app}\{#AppExeName}
+UninstallDisplayIcon={app}\bin\{#AppExeName}
+UninstallFilesDir={app}\bin
 VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup
 SetupIconFile=..\Assets\icon.ico
 
 [Files]
-Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "default.ini"; DestDir: "{app}"; DestName: "config.ini"; Flags: onlyifdoesntexist
-Source: "{tmp}\{#ExifToolBaseName}\exiftool.exe"; DestDir: "{app}"; Flags: external skipifsourcedoesntexist ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
-Source: "{tmp}\{#ExifToolBaseName}\exiftool_files\*"; DestDir: "{app}\exiftool_files"; Flags: external skipifsourcedoesntexist recursesubdirs ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
+Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "default.ini"; DestDir: "{app}\bin"; DestName: "config.ini"; Flags: onlyifdoesntexist
+Source: "ETSU Documentation.url"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{tmp}\{#ExifToolBaseName}\exiftool.exe"; DestDir: "{app}\exiftool"; Flags: external skipifsourcedoesntexist ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
+Source: "{tmp}\{#ExifToolBaseName}\exiftool_files\*"; DestDir: "{app}\exiftool\exiftool_files"; Flags: external skipifsourcedoesntexist recursesubdirs ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
 
 [Dirs]
-Name: "{app}\logs\etsu"
+Name: "{app}\bin"
+Name: "{app}\exiftool"
+Name: "{app}\logs"
 Name: "{app}\tmp"
 
 [Registry]
@@ -85,18 +89,21 @@ Root: HKCU; Subkey: "Software\Classes\*\shell\etsu"; ValueType: string; ValueNam
 
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\a_read"; ValueType: string; ValueName: "MUIVerb"; ValueData: "&Read metadata..."
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\a_read"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Single"
-Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\a_read\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" read ""%L"""
+Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\a_read\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bin\{#AppExeName}"" read ""%L"""
 
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\b_clean"; ValueType: string; ValueName: "MUIVerb"; ValueData: "&Clean metadata..."
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\b_clean"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
-Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\b_clean\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" clean ""%L"""
+Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\b_clean\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bin\{#AppExeName}"" clean ""%L"""
 
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: string; ValueName: "MUIVerb"; ValueData: "&Set date..."
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
-Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExeName}"" date ""%L"""
+Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bin\{#AppExeName}"" date ""%L"""
+
+[Icons]
+Name: "{app}\Uninstall"; Filename: "{app}\bin\uninstall.exe"; IconFilename: "{app}\bin\{#AppExeName}"; Comment: "Uninstall {#AppName}"
 
 [UninstallDelete]
-Type: files; Name: "{app}\config.ini"
+Type: files; Name: "{app}\bin\config.ini"
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\tmp"
 
@@ -108,7 +115,9 @@ const
   ExifToolSHA256 = '{#ExifToolHash}';
   EnvironmentKey = 'Environment';
   AppRegistryKey = 'Software\TinyScripts\ETSU';
+  UninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{81ADEFE9-F5E3-4A42-8DF5-5D7E9AE39925}_is1';
   ExifToolPathMarker = 'ExifToolPathAdded';
+  BinPathMarker = 'BinPathAdded';
   ExifToolFilesMarker = 'ExifToolFilesInstalled';
 
 var
@@ -173,7 +182,7 @@ begin
   DownloadText.AutoSize := False;
   DownloadText.WordWrap := True;
   DownloadText.Width := ExifToolPage.SurfaceWidth - DownloadText.Left;
-  DownloadText.Caption := 'Setup will download ExifTool 13.60 (~11 MB) from SourceForge and place it alongside etsu.exe.';
+  DownloadText.Caption := 'Setup will download ExifTool 13.60 (~11 MB) from SourceForge and place it in the exiftool folder.';
   DownloadText.AdjustHeight;
 
   ExifToolManualRadio := TNewRadioButton.Create(ExifToolPage);
@@ -248,7 +257,7 @@ function ExifToolLocation(): string;
 var
   Configured: string;
 begin
-  Configured := GetIniString('General', 'exiftoolPATH', 'null', ExpandConstant('{app}\config.ini'));
+  Configured := GetIniString('General', 'exiftoolPATH', 'null', ExpandConstant('{app}\bin\config.ini'));
   if CompareText(Configured, 'null') <> 0 then
   begin
     if FileExists(Configured) then
@@ -262,7 +271,7 @@ begin
   if Result <> '' then
     Exit;
 
-  Result := ExpandConstant('{app}\exiftool.exe');
+  Result := ExpandConstant('{app}\exiftool\exiftool.exe');
   if FileExists(Result) then
     Exit;
 
@@ -537,20 +546,37 @@ begin
   end;
 end;
 
-procedure FinishExifToolInstall;
+function AddPathEntry(const Entry, MarkerName: string): Boolean;
 var
-  AppDir, ConfigPath, Configured: string;
   Added: Boolean;
   Marker: Cardinal;
+begin
+  Result := AddToUserPath(Entry, Added);
+  if not Result then
+    Exit;
+
+  if Added then
+  begin
+    if not RegWriteDWordValue(HKCU, AppRegistryKey, MarkerName, 1) then
+      Log('Could not record that Setup added ' + Entry + ' to PATH.');
+  end
+  else if not RegQueryDWordValue(HKCU, AppRegistryKey, MarkerName, Marker) then
+    Log(Entry + ' was already on PATH; Setup will leave it in place on uninstall.');
+end;
+
+procedure FinishExifToolInstall;
+var
+  ExifDir, BinDir, ConfigPath, Configured: string;
+  PathOK: Boolean;
 begin
   if not ExifToolInstalled then
     Exit;
 
-  AppDir := ExpandConstant('{app}');
-  if not FileExists(AddBackslash(AppDir) + 'exiftool.exe') then
+  ExifDir := ExpandConstant('{app}\exiftool');
+  if not FileExists(AddBackslash(ExifDir) + 'exiftool.exe') then
   begin
     Log('ExifTool was downloaded but exiftool.exe is missing after the file copy.');
-    MsgBox('ExifTool was downloaded, but exiftool.exe was not copied into:' + #13#10 + AppDir + #13#10 + #13#10 +
+    MsgBox('ExifTool was downloaded, but exiftool.exe was not copied into:' + #13#10 + ExifDir + #13#10 + #13#10 +
            'Install ExifTool manually or run Setup again.', mbError, MB_OK);
     Exit;
   end;
@@ -558,7 +584,7 @@ begin
   if not RegWriteDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, 1) then
     Log('Could not record that Setup installed ExifTool.');
 
-  ConfigPath := AddBackslash(AppDir) + 'config.ini';
+  ConfigPath := ExpandConstant('{app}\bin\config.ini');
   Configured := GetIniString('General', 'exiftoolPATH', 'null', ConfigPath);
   if (CompareText(Configured, 'null') <> 0) and (not FileExists(Configured)) then
   begin
@@ -568,22 +594,68 @@ begin
       Log('Could not reset invalid exiftoolPATH in config.ini.');
   end;
 
-  if AddToUserPath(AppDir, Added) then
+  BinDir := ExpandConstant('{app}\bin');
+  PathOK := AddPathEntry(ExifDir, ExifToolPathMarker);
+  if not AddPathEntry(BinDir, BinPathMarker) then
+    PathOK := False;
+
+  if not PathOK then
   begin
-    if Added then
-    begin
-      if not RegWriteDWordValue(HKCU, AppRegistryKey, ExifToolPathMarker, 1) then
-        Log('Could not record that Setup added the ETSU folder to PATH.');
-    end
-    else if not RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolPathMarker, Marker) then
-      Log('The ETSU folder was already on PATH; Setup will leave it in place on uninstall.');
-  end
-  else
-  begin
-    Log('Could not add the ETSU folder to PATH.');
-    MsgBox('ExifTool was installed in:' + #13#10 + AppDir + #13#10 + #13#10 +
-           'Setup could not add that folder to PATH. ETSU will still find ExifTool in its install folder.' + #13#10 + #13#10 +
+    Log('Could not add the ETSU directories to PATH.');
+    MsgBox('ExifTool was installed in:' + #13#10 + ExifDir + #13#10 + #13#10 +
+           'Setup could not add the ETSU directories to PATH. ETSU will still find ExifTool in its install folder.' + #13#10 + #13#10 +
            'To use exiftool from a terminal, add that folder to PATH yourself.', mbError, MB_OK);
+  end;
+end;
+
+procedure RenameUninstaller;
+var
+  OldExe, NewExe, OldDat, NewDat, Value: string;
+  Renamed: Boolean;
+begin
+  OldExe := ExpandConstant('{app}\bin\unins000.exe');
+  NewExe := ExpandConstant('{app}\bin\uninstall.exe');
+  OldDat := ExpandConstant('{app}\bin\unins000.dat');
+  NewDat := ExpandConstant('{app}\bin\uninstall.dat');
+
+  Renamed := False;
+  if FileExists(OldExe) then
+  begin
+    if FileExists(NewExe) and (not DeleteFile(NewExe)) then
+    begin
+      Log('Could not replace the existing uninstall.exe.');
+      Exit;
+    end;
+    Renamed := RenameFile(OldExe, NewExe);
+    if not Renamed then
+      Log('Could not rename unins000.exe to uninstall.exe.');
+  end
+  else if FileExists(NewExe) then
+    Renamed := True;
+
+  if not Renamed then
+    Exit;
+
+  if FileExists(OldDat) then
+  begin
+    if FileExists(NewDat) and (not DeleteFile(NewDat)) then
+      Log('Could not replace the existing uninstall.dat.')
+    else if not RenameFile(OldDat, NewDat) then
+      Log('Could not rename unins000.dat to uninstall.dat.');
+  end;
+
+  if RegQueryStringValue(HKCU, UninstallKey, 'UninstallString', Value) then
+  begin
+    StringChangeEx(Value, 'unins000.exe', 'uninstall.exe', True);
+    if not RegWriteStringValue(HKCU, UninstallKey, 'UninstallString', Value) then
+      Log('Could not update UninstallString.');
+  end;
+
+  if RegQueryStringValue(HKCU, UninstallKey, 'QuietUninstallString', Value) then
+  begin
+    StringChangeEx(Value, 'unins000.exe', 'uninstall.exe', True);
+    if not RegWriteStringValue(HKCU, UninstallKey, 'QuietUninstallString', Value) then
+      Log('Could not update QuietUninstallString.');
   end;
 end;
 
@@ -614,7 +686,10 @@ begin
     end;
   end
   else if CurStep = ssPostInstall then
+  begin
     FinishExifToolInstall;
+    RenameUninstaller;
+  end;
 end;
 
 function InitializeUninstall: Boolean;
@@ -625,15 +700,16 @@ end;
 
 procedure RemoveExifToolFiles;
 var
-  AppDir, ExePath, FilesDir: string;
+  ExifDir, ExePath, FilesDir: string;
 begin
-  AppDir := ExpandConstant('{app}');
-  ExePath := AddBackslash(AppDir) + 'exiftool.exe';
-  FilesDir := AddBackslash(AppDir) + 'exiftool_files';
+  ExifDir := ExpandConstant('{app}\exiftool');
+  ExePath := AddBackslash(ExifDir) + 'exiftool.exe';
+  FilesDir := AddBackslash(ExifDir) + 'exiftool_files';
   if FileExists(ExePath) and (not DeleteFile(ExePath)) then
     Log('Could not delete exiftool.exe.');
   if DirExists(FilesDir) and (not DelTree(FilesDir, True, True, True)) then
     Log('Could not delete exiftool_files.');
+  RemoveDir(ExifDir);
 end;
 
 procedure InitializeUninstallProgressForm;
@@ -653,7 +729,7 @@ begin
     Exit;
   if not RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, Marker) or (Marker = 0) then
     Exit;
-  if not FileExists(ExpandConstant('{app}\exiftool.exe')) then
+  if not FileExists(ExpandConstant('{app}\exiftool\exiftool.exe')) then
     Exit;
 
   ctrl := UninstallProgressForm.StatusLabel;
@@ -684,7 +760,7 @@ begin
   InfoText.AutoSize := False;
   InfoText.WordWrap := True;
   InfoText.Caption := 'Setup installed ExifTool in:' + #13#10 +
-    ExpandConstant('{app}') + #13#10#13#10 +
+    ExpandConstant('{app}\exiftool') + #13#10#13#10 +
     'ETSU will be uninstalled. Leave the option below checked to remove ExifTool and its PATH entry, or clear it to keep them.';
   InfoText.AdjustHeight;
 
@@ -726,8 +802,22 @@ begin
   if CurUninstallStep <> usUninstall then
     Exit;
 
+  if RegQueryDWordValue(HKCU, AppRegistryKey, BinPathMarker, Marker) and (Marker <> 0) then
+  begin
+    if RemoveFromUserPath(ExpandConstant('{app}\bin')) then
+    begin
+      if not RegDeleteValue(HKCU, AppRegistryKey, BinPathMarker) then
+        Log('Could not remove the ETSU bin PATH marker.');
+    end
+    else
+      Log('Could not remove the ETSU bin folder from PATH.');
+  end;
+
   if not UninstallExifTool then
+  begin
+    RegDeleteKeyIfEmpty(HKCU, AppRegistryKey);
     Exit;
+  end;
 
   if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, Marker) and (Marker <> 0) then
   begin
@@ -738,13 +828,13 @@ begin
 
   if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolPathMarker, Marker) and (Marker <> 0) then
   begin
-    if RemoveFromUserPath(ExpandConstant('{app}')) then
+    if RemoveFromUserPath(ExpandConstant('{app}\exiftool')) then
     begin
       if not RegDeleteValue(HKCU, AppRegistryKey, ExifToolPathMarker) then
-        Log('Could not remove the PATH marker.');
+        Log('Could not remove the ExifTool PATH marker.');
       RegDeleteKeyIfEmpty(HKCU, AppRegistryKey);
     end
     else
-      Log('Could not remove the ETSU folder from PATH.');
+      Log('Could not remove the ExifTool folder from PATH.');
   end;
 end;

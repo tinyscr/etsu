@@ -1,6 +1,6 @@
 # Configuration
 
-ETSU reads `config.ini` from the install directory. The installer creates the file from a bundled default when it is missing. The format is INI-like: section and key names are case-insensitive, and lines starting with `#` or `;` are comments. Each action loads the file when it starts, so restart the action after editing it.
+ETSU reads `config.ini` from the `bin` directory inside the install directory. The installer creates the file from a bundled default when it is missing. The format is INI-like: section and key names are case-insensitive, and lines starting with `#` or `;` are comments. Each action loads the file when it starts, so restart the action after editing it.
 
 ## Default file
 
@@ -25,7 +25,7 @@ logCount=10
 
 | Section | Key | Default | Effect |
 | --- | --- | --- | --- |
-| General | `exiftoolPATH` | `null` | `null` searches PATH, then the directory containing `etsu.exe`. Any other value must be a full path to an existing `exiftool.exe`. |
+| General | `exiftoolPATH` | `null` | `null` searches PATH, then `<install>\exiftool\exiftool.exe`. Any other value must be a full path to an existing `exiftool.exe`. |
 | clean, date, read | `log` | `true` for clean and date, `false` for read | `true` enables logging. Any other value disables it. |
 | clean, date, read | `logCount` | `10` | Number of logs to keep per action. Older logs are deleted after a new log is written. Invalid or negative values use `10`. |
 
@@ -37,16 +37,16 @@ If the file or a section is missing, ETSU uses the defaults.
 
 | Purpose | Path |
 | --- | --- |
-| Config | `<install>\config.ini` |
-| Logs | `<install>\logs\etsu\` |
+| Config | `<install>\bin\config.ini` |
+| Logs | `<install>\logs\` |
 | App temp directory | `<install>\tmp\` |
-| ExifTool, when installed by Setup | `<install>\exiftool.exe` and `<install>\exiftool_files\` |
+| ExifTool, when installed by Setup | `<install>\exiftool\exiftool.exe` and `<install>\exiftool\exiftool_files\` |
 | Operation workspace | Beside the original file (`<original folder>\.etsu_<random>\`) |
 | Default install directory | `%LOCALAPPDATA%\Programs\ETSU` |
 
 ETSU creates the log and temp directories at startup and checks that the temp directory is writable. The operation workspace is separate from the app temp directory because the replacement step needs the workspace and the original file on the same volume.
 
-The uninstaller removes `config.ini`, `logs`, and `tmp`. When Setup installed ExifTool, it also asks whether to remove it, checked by default. If you leave it checked, it removes ExifTool files and the PATH entry only when Setup added it. If you clear it, ExifTool and its PATH entry remain. Back up `config.ini` before uninstalling if you want to keep it.
+The uninstaller removes `<install>\bin\config.ini`, `logs`, and `tmp`. When Setup installed ExifTool, it also asks whether to remove it, checked by default. If you leave it checked, it removes ExifTool files and the PATH entries only when Setup added them. If you clear it, ExifTool and its PATH entry remain. The `bin` PATH entry is removed either way. Back up `config.ini` before uninstalling if you want to keep it.
 
 ## Logs
 
@@ -69,14 +69,14 @@ A successful run deletes the `.bak` file. ETSU does not automatically restore th
 
 ## ExifTool
 
-ETSU does not bundle ExifTool. The installer can download ExifTool 13.60 from SourceForge (`downloads.sourceforge.net/project/exiftool/`), verify its SHA-256 checksum, extract it into the install directory, and add that directory to the current user's PATH. The page appears only when ExifTool is not already found, and the download option is selected by default. ETSU does not install unless ExifTool is found or downloaded. Choose manual installation to stop and install ExifTool yourself, then run Setup again. Use one of these options instead:
+ETSU does not bundle ExifTool. The installer can download ExifTool 13.60 from SourceForge (`downloads.sourceforge.net/project/exiftool/`), verify its SHA-256 checksum, extract it into `<install>\exiftool\`, and add that directory and `<install>\bin\` to the current user's PATH. The page appears only when ExifTool is not already found, and the download option is selected by default. ETSU does not install unless ExifTool is found or downloaded. Choose manual installation to stop and install ExifTool yourself, then run Setup again. Use one of these options instead:
 
 1. Set `exiftoolPATH` to the full path of `exiftool.exe`.
 2. Put `exiftool.exe` on PATH.
-3. Put `exiftool.exe` next to `etsu.exe`.
+3. Put `exiftool.exe` in `<install>\exiftool\`.
 
 ETSU uses `exiftoolPATH` when it is not `null`. If that path does not exist, ETSU shows an error and does not fall back to PATH. After a successful installer download, Setup resets an invalid `exiftoolPATH` to `null` so ETSU can use the installed copy. Clean and date logs show the detected ExifTool version.
 
-When you choose the download option, the installer adds the install directory itself to PATH, so `etsu.exe` is also available from a terminal. Restart Explorer or sign out and back in if a new terminal still does not see the updated PATH.
+When you choose the download option, the installer adds `<install>\exiftool\` and `<install>\bin\` to PATH, so both `exiftool.exe` and `etsu.exe` are available from a terminal. Restart Explorer or sign out and back in if a new terminal still does not see the updated PATH.
 
 [Documentation](README.md)

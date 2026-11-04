@@ -92,11 +92,29 @@ Build outputs are `bin\etsu.exe`, `obj\Version.g.cs`, `bin\tests\etsu-tests.exe`
 
 ## Installer
 
-`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. `build.ps1` passes the version, architecture, and ExifTool version and SHA-256 checksum. A direct Inno compile without `AppVersion`, `AppArchitecture`, or `ExifToolHash` fails. The x64 installer uses `x64compatible` and 64-bit install mode; the x86 installer uses `x86compatible`. Both use the same AppId, so only one architecture is installed at a time. The installer seeds `config.ini` only when the file is missing, creates `logs\etsu` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `config.ini`, `logs`, and `tmp`, and can optionally remove ExifTool files that Setup installed.
+`src\Installer\etsu.iss` builds the per-user installer from `bin\etsu.exe`. `build.ps1` passes the version, architecture, and ExifTool version and SHA-256 checksum. A direct Inno compile without `AppVersion`, `AppArchitecture`, or `ExifToolHash` fails. The x64 installer uses `x64compatible` and 64-bit install mode; the x86 installer uses `x86compatible`. Both use the same AppId, so only one architecture is installed at a time. The installer seeds `bin\config.ini` only when the file is missing, creates `logs` and `tmp`, and registers the Explorer menu under HKCU. The uninstaller removes `bin\config.ini`, `logs`, and `tmp`, and can optionally remove ExifTool files that Setup installed.
 
-The wizard is forced dark with `WizardStyle=modern dark includetitlebar` and uses `LICENSE` for the license text. After the directory page, a custom page appears only when ExifTool is missing. It says ExifTool was not found and shows two radio choices: download it during Setup (selected by default) or install it manually. Choosing manual disables Next and explains the next step. Before copying files, `PrepareToInstall` checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool, and refuses to install while ExifTool is missing and the download option was not selected. If ExifTool is missing and the user chooses download, `ssInstall` downloads the pinned `exiftool-<version>_<arch>.zip` from SourceForge, verifies its SHA-256, extracts it with native `ExtractArchive`, renames `exiftool(-k).exe` to `exiftool.exe`, and lets `[Files]` copy the package beside `etsu.exe`. The download and checksum are pinned in `build.ps1`; update both when bumping ExifTool.
+The installed layout is:
 
-After a successful download, Setup adds the install folder to `HKCU\Environment\Path`, records that it added the entry, and resets an invalid `exiftoolPATH` in `config.ini` to `null`. ExifTool files use `uninsneveruninstall`, so the uninstaller handles them with an `Uninstall ExifTool` checkbox, checked by default. If checked, it removes ExifTool files and the PATH entry only when Setup added that entry; if cleared, both remain. The installer requires Inno Setup 7 because it uses `ArchiveExtraction=full` and `ExtractArchive`.
+```text
+<install>\
+  bin\etsu.exe
+  bin\config.ini
+  bin\uninstall.exe
+  bin\uninstall.dat
+  exiftool\exiftool.exe
+  exiftool\exiftool_files\
+  logs\
+  tmp\
+  Uninstall.lnk
+  ETSU Documentation.url
+```
+
+Inno Setup creates `unins000.exe` and `unins000.dat`; Setup renames them to `uninstall.exe` and `uninstall.dat` after installation and updates the Windows uninstall entries.
+
+The wizard is forced dark with `WizardStyle=modern dark includetitlebar` and uses `LICENSE` for the license text. After the directory page, a custom page appears only when ExifTool is missing. It says ExifTool was not found and shows two radio choices: download it during Setup (selected by default) or install it manually. Choosing manual disables Next and explains the next step. Before copying files, `PrepareToInstall` checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool, and refuses to install while ExifTool is missing and the download option was not selected. If ExifTool is missing and the user chooses download, `ssInstall` downloads the pinned `exiftool-<version>_<arch>.zip` from SourceForge, verifies its SHA-256, extracts it with native `ExtractArchive`, renames `exiftool(-k).exe` to `exiftool.exe`, and lets `[Files]` copy the package into `exiftool\`. The download and checksum are pinned in `build.ps1`; update both when bumping ExifTool.
+
+After a successful download, Setup adds `<install>\exiftool` and `<install>\bin` to `HKCU\Environment\Path`, records which entries it added, and resets an invalid `exiftoolPATH` in `bin\config.ini` to `null`. ExifTool files use `uninsneveruninstall`, so the uninstaller handles them with an `Uninstall ExifTool` checkbox, checked by default. If checked, it removes ExifTool files and both PATH entries only when Setup added them; if cleared, ExifTool and its PATH entry remain, while the `bin` PATH entry is removed. The installer requires Inno Setup 7 because it uses `ArchiveExtraction=full` and `ExtractArchive`.
 
 The GitHub workflows install the pinned Inno Setup 7.1.1 x64 release into the runner before building.
 

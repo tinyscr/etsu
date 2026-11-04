@@ -3,6 +3,7 @@
 /dist/
 /obj/
 /logs/
+/tmp/
 /.vs/
 *.user
 *.suo
