@@ -115,51 +115,15 @@ var
   CheckProgressPage: TOutputProgressWizardPage;
   DownloadPage: TDownloadWizardPage;
   ExifToolPage: TWizardPage;
-  ExifToolYesCheck, ExifToolNoCheck: TNewCheckBox;
-  ExifToolHint: TNewLinkLabel;
-  ExifToolChoiceUpdating: Boolean;
+  ExifToolDownloadRadio, ExifToolManualRadio: TNewRadioButton;
   ExifToolInstallSelected: Boolean;
   ExifToolInstalled: Boolean;
   UninstallExifTool: Boolean;
 
-procedure ExifToolYesClick(Sender: TObject);
+procedure ExifToolChoiceClick(Sender: TObject);
 begin
-  if ExifToolChoiceUpdating then
-    Exit;
-  ExifToolChoiceUpdating := True;
-  try
-    if ExifToolYesCheck.Checked then
-    begin
-      ExifToolNoCheck.Checked := False;
-      ExifToolInstallSelected := True;
-    end
-    else
-      ExifToolYesCheck.Checked := True;
-  finally
-    ExifToolChoiceUpdating := False;
-  end;
-  WizardForm.NextButton.Enabled := True;
-  ExifToolHint.Visible := False;
-end;
-
-procedure ExifToolNoClick(Sender: TObject);
-begin
-  if ExifToolChoiceUpdating then
-    Exit;
-  ExifToolChoiceUpdating := True;
-  try
-    if ExifToolNoCheck.Checked then
-    begin
-      ExifToolYesCheck.Checked := False;
-      ExifToolInstallSelected := False;
-    end
-    else
-      ExifToolNoCheck.Checked := True;
-  finally
-    ExifToolChoiceUpdating := False;
-  end;
-  WizardForm.NextButton.Enabled := False;
-  ExifToolHint.Visible := True;
+  ExifToolInstallSelected := ExifToolDownloadRadio.Checked;
+  WizardForm.NextButton.Enabled := ExifToolInstallSelected;
 end;
 
 procedure LinkLabelOnLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
@@ -172,46 +136,64 @@ end;
 
 procedure CreateExifToolPage;
 var
-  InfoText: TNewLinkLabel;
+  InfoText, PromptText, DownloadText: TNewStaticText;
+  ManualText: TNewLinkLabel;
 begin
-  ExifToolPage := CreateCustomPage(wpSelectDir, 'ExifTool', 'ExifTool was not found.');
+  ExifToolPage := CreateCustomPage(wpSelectDir, 'ExifTool Required', '');
 
-  InfoText := TNewLinkLabel.Create(ExifToolPage);
+  InfoText := TNewStaticText.Create(ExifToolPage);
   InfoText.Parent := ExifToolPage.Surface;
   InfoText.AutoSize := False;
+  InfoText.WordWrap := True;
   InfoText.Width := ExifToolPage.SurfaceWidth;
-  InfoText.Caption := 'Setup can download ExifTool 13.60 from ' +
-    '<a href="https://downloads.sourceforge.net/project/exiftool/">SourceForge</a> and install it beside etsu.exe.';
-  InfoText.OnLinkClick := @LinkLabelOnLinkClick;
+  InfoText.Caption := 'ExifTool was not found on your system. ETSU requires ExifTool to function.';
   InfoText.AdjustHeight;
 
-  ExifToolYesCheck := TNewCheckBox.Create(ExifToolPage);
-  ExifToolYesCheck.Parent := ExifToolPage.Surface;
-  ExifToolYesCheck.Top := InfoText.Top + InfoText.Height + ScaleY(16);
-  ExifToolYesCheck.Width := ExifToolPage.SurfaceWidth;
-  ExifToolYesCheck.Height := ScaleY(17);
-  ExifToolYesCheck.Caption := 'Yes, download and install ExifTool 13.60 (about 11 MB).';
-  ExifToolYesCheck.Checked := True;
-  ExifToolYesCheck.OnClick := @ExifToolYesClick;
+  PromptText := TNewStaticText.Create(ExifToolPage);
+  PromptText.Parent := ExifToolPage.Surface;
+  PromptText.Top := InfoText.Top + InfoText.Height + ScaleY(18);
+  PromptText.Width := ExifToolPage.SurfaceWidth;
+  PromptText.Caption := 'How would you like to proceed?';
+  PromptText.Font.Style := [fsBold];
 
-  ExifToolNoCheck := TNewCheckBox.Create(ExifToolPage);
-  ExifToolNoCheck.Parent := ExifToolPage.Surface;
-  ExifToolNoCheck.Top := ExifToolYesCheck.Top + ExifToolYesCheck.Height + ScaleY(8);
-  ExifToolNoCheck.Width := ExifToolPage.SurfaceWidth;
-  ExifToolNoCheck.Height := ScaleY(17);
-  ExifToolNoCheck.Caption := 'No, I will install ExifTool manually.';
-  ExifToolNoCheck.OnClick := @ExifToolNoClick;
+  ExifToolDownloadRadio := TNewRadioButton.Create(ExifToolPage);
+  ExifToolDownloadRadio.Parent := ExifToolPage.Surface;
+  ExifToolDownloadRadio.Top := PromptText.Top + PromptText.Height + ScaleY(12);
+  ExifToolDownloadRadio.Width := ExifToolPage.SurfaceWidth;
+  ExifToolDownloadRadio.Height := ScaleY(17);
+  ExifToolDownloadRadio.Caption := 'Download and install ExifTool automatically (recommended)';
+  ExifToolDownloadRadio.Font.Style := [fsBold];
+  ExifToolDownloadRadio.Checked := True;
+  ExifToolDownloadRadio.OnClick := @ExifToolChoiceClick;
 
-  ExifToolHint := TNewLinkLabel.Create(ExifToolPage);
-  ExifToolHint.Parent := ExifToolPage.Surface;
-  ExifToolHint.AutoSize := False;
-  ExifToolHint.Width := ExifToolPage.SurfaceWidth;
-  ExifToolHint.Top := ExifToolNoCheck.Top + ExifToolNoCheck.Height + ScaleY(12);
-  ExifToolHint.Caption := 'Next is disabled because ETSU requires ExifTool.' + #13#10 +
-    'Install it from <a href="https://exiftool.org/">exiftool.org</a>, then run Setup again.';
-  ExifToolHint.OnLinkClick := @LinkLabelOnLinkClick;
-  ExifToolHint.AdjustHeight;
-  ExifToolHint.Visible := False;
+  DownloadText := TNewStaticText.Create(ExifToolPage);
+  DownloadText.Parent := ExifToolPage.Surface;
+  DownloadText.Left := ScaleX(17);
+  DownloadText.Top := ExifToolDownloadRadio.Top + ExifToolDownloadRadio.Height + ScaleY(3);
+  DownloadText.AutoSize := False;
+  DownloadText.WordWrap := True;
+  DownloadText.Width := ExifToolPage.SurfaceWidth - DownloadText.Left;
+  DownloadText.Caption := 'Setup will download ExifTool 13.60 (~11 MB) from SourceForge and place it alongside etsu.exe.';
+  DownloadText.AdjustHeight;
+
+  ExifToolManualRadio := TNewRadioButton.Create(ExifToolPage);
+  ExifToolManualRadio.Parent := ExifToolPage.Surface;
+  ExifToolManualRadio.Top := DownloadText.Top + DownloadText.Height + ScaleY(14);
+  ExifToolManualRadio.Width := ExifToolPage.SurfaceWidth;
+  ExifToolManualRadio.Height := ScaleY(17);
+  ExifToolManualRadio.Caption := 'I''ll install ExifTool manually';
+  ExifToolManualRadio.Font.Style := [fsBold];
+  ExifToolManualRadio.OnClick := @ExifToolChoiceClick;
+
+  ManualText := TNewLinkLabel.Create(ExifToolPage);
+  ManualText.Parent := ExifToolPage.Surface;
+  ManualText.Left := ScaleX(17);
+  ManualText.Top := ExifToolManualRadio.Top + ExifToolManualRadio.Height + ScaleY(3);
+  ManualText.AutoSize := False;
+  ManualText.Width := ExifToolPage.SurfaceWidth - ManualText.Left;
+  ManualText.Caption := 'Download ExifTool from <a href="https://exiftool.org/">exiftool.org</a>, install it, then run this setup again.';
+  ManualText.OnLinkClick := @LinkLabelOnLinkClick;
+  ManualText.AdjustHeight;
 
   ExifToolInstallSelected := True;
 end;
