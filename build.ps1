@@ -72,20 +72,30 @@ function Find-Iscc {
     if ($env:ProgramFiles) {
         $roots += $env:ProgramFiles
     }
+    $candidates = @()
     foreach ($root in $roots) {
         if (-not (Test-Path -LiteralPath $root)) {
             continue
         }
-        $dirs = Get-ChildItem -LiteralPath $root -Directory -Filter "Inno Setup *" -ErrorAction SilentlyContinue |
-            Sort-Object Name -Descending
+        $dirs = Get-ChildItem -LiteralPath $root -Directory -Filter "Inno Setup *" -ErrorAction SilentlyContinue
         foreach ($dir in $dirs) {
+            if ($dir.Name -notmatch '^Inno Setup (\d+)') {
+                continue
+            }
+            $major = [int]$Matches[1]
+            if ($major -lt 7) {
+                continue
+            }
             $candidate = Join-Path $dir.FullName "ISCC.exe"
             if (Test-Path -LiteralPath $candidate) {
-                return $candidate
+                $candidates += [pscustomobject]@{ Major = $major; Path = $candidate }
             }
         }
     }
-    Fail "Inno Setup 7 or later not found. Install it with: winget install JRSoftware.InnoSetup.7 --scope user"
+    if ($candidates.Count -eq 0) {
+        Fail "Inno Setup 7 or later not found. Install it with: winget install JRSoftware.InnoSetup.7 --scope user"
+    }
+    return ($candidates | Sort-Object Major -Descending | Select-Object -First 1).Path
 }
 
 if (-not (Test-Path -LiteralPath $versionPath)) {
