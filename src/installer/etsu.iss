@@ -116,6 +116,7 @@ var
   DownloadPage: TDownloadWizardPage;
   ExifToolPage: TWizardPage;
   ExifToolYesCheck, ExifToolNoCheck: TNewCheckBox;
+  ExifToolHint: TNewLinkLabel;
   ExifToolChoiceUpdating: Boolean;
   ExifToolInstallSelected: Boolean;
   ExifToolInstalled: Boolean;
@@ -138,6 +139,7 @@ begin
     ExifToolChoiceUpdating := False;
   end;
   WizardForm.NextButton.Enabled := True;
+  ExifToolHint.Visible := False;
 end;
 
 procedure ExifToolNoClick(Sender: TObject);
@@ -157,6 +159,7 @@ begin
     ExifToolChoiceUpdating := False;
   end;
   WizardForm.NextButton.Enabled := False;
+  ExifToolHint.Visible := True;
 end;
 
 procedure LinkLabelOnLinkClick(Sender: TObject; const Link: string; LinkType: TSysLinkType);
@@ -177,10 +180,8 @@ begin
   InfoText.Parent := ExifToolPage.Surface;
   InfoText.AutoSize := False;
   InfoText.Width := ExifToolPage.SurfaceWidth;
-  InfoText.Caption := 'Setup can download ExifTool 13.60 (about 11 MB) from ' +
-    '<a href="https://downloads.sourceforge.net/project/exiftool/">SourceForge</a> and install it beside etsu.exe, ' +
-    'or you can install it from <a href="https://exiftool.org/">exiftool.org</a>. ' +
-    'ETSU will not be installed unless ExifTool is found or Setup installs it.';
+  InfoText.Caption := 'Setup can download ExifTool 13.60 from ' +
+    '<a href="https://downloads.sourceforge.net/project/exiftool/">SourceForge</a> and install it beside etsu.exe.';
   InfoText.OnLinkClick := @LinkLabelOnLinkClick;
   InfoText.AdjustHeight;
 
@@ -198,8 +199,19 @@ begin
   ExifToolNoCheck.Top := ExifToolYesCheck.Top + ExifToolYesCheck.Height + ScaleY(8);
   ExifToolNoCheck.Width := ExifToolPage.SurfaceWidth;
   ExifToolNoCheck.Height := ScaleY(17);
-  ExifToolNoCheck.Caption := 'No, I will install ExifTool manually and run Setup again.';
+  ExifToolNoCheck.Caption := 'No, I will install ExifTool manually.';
   ExifToolNoCheck.OnClick := @ExifToolNoClick;
+
+  ExifToolHint := TNewLinkLabel.Create(ExifToolPage);
+  ExifToolHint.Parent := ExifToolPage.Surface;
+  ExifToolHint.AutoSize := False;
+  ExifToolHint.Width := ExifToolPage.SurfaceWidth;
+  ExifToolHint.Top := ExifToolNoCheck.Top + ExifToolNoCheck.Height + ScaleY(12);
+  ExifToolHint.Caption := 'Next is disabled because ETSU requires ExifTool.' + #13#10 +
+    'Install it from <a href="https://exiftool.org/">exiftool.org</a>, then run Setup again.';
+  ExifToolHint.OnLinkClick := @LinkLabelOnLinkClick;
+  ExifToolHint.AdjustHeight;
+  ExifToolHint.Visible := False;
 
   ExifToolInstallSelected := True;
 end;
