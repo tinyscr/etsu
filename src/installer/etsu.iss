@@ -99,11 +99,9 @@ Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: str
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bin\{#AppExeName}"" date ""%L"""
 
-[Icons]
-Name: "{app}\Uninstall"; Filename: "{app}\bin\uninstall.exe"; IconFilename: "{app}\bin\{#AppExeName}"; Comment: "Uninstall {#AppName}"
-
 [UninstallDelete]
 Type: files; Name: "{app}\bin\config.ini"
+Type: files; Name: "{app}\Uninstall.lnk"
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\tmp"
 
@@ -659,6 +657,25 @@ begin
   end;
 end;
 
+procedure CreateUninstallShortcut;
+var
+  LinkPath, TargetPath: string;
+begin
+  LinkPath := ExpandConstant('{app}\Uninstall.lnk');
+  TargetPath := ExpandConstant('{app}\bin\uninstall.exe');
+  if not FileExists(TargetPath) then
+  begin
+    Log('Skipping the Uninstall shortcut: uninstall.exe was not found.');
+    Exit;
+  end;
+
+  try
+    CreateShellLink(LinkPath, 'Uninstall ETSU', TargetPath, '', ExpandConstant('{app}\bin'), '', 0, 1);
+  except
+    Log('Could not create Uninstall.lnk: ' + GetExceptionMessage);
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   Error: string;
@@ -689,6 +706,7 @@ begin
   begin
     FinishExifToolInstall;
     RenameUninstaller;
+    CreateUninstallShortcut;
   end;
 end;
 
