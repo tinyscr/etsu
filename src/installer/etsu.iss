@@ -732,7 +732,6 @@ end;
 
 procedure InitializeUninstallProgressForm;
 var
-  Marker: Cardinal;
   UninstallPage: TNewNotebookPage;
   UninstallButton: TNewButton;
   ExifToolCheckbox: TNewCheckBox;
@@ -744,8 +743,6 @@ var
 begin
   UninstallExifTool := True;
   if UninstallSilent then
-    Exit;
-  if not RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, Marker) or (Marker = 0) then
     Exit;
   if not FileExists(ExpandConstant('{app}\exiftool\exiftool.exe')) then
     Exit;
@@ -837,22 +834,25 @@ begin
     Exit;
   end;
 
+  if FileExists(ExpandConstant('{app}\exiftool\exiftool.exe')) or
+     DirExists(ExpandConstant('{app}\exiftool')) then
+    RemoveExifToolFiles;
+
   if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolFilesMarker, Marker) and (Marker <> 0) then
   begin
-    RemoveExifToolFiles;
     if not RegDeleteValue(HKCU, AppRegistryKey, ExifToolFilesMarker) then
       Log('Could not remove the ExifTool files marker.');
   end;
 
-  if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolPathMarker, Marker) and (Marker <> 0) then
+  if RemoveFromUserPath(ExpandConstant('{app}\exiftool')) then
   begin
-    if RemoveFromUserPath(ExpandConstant('{app}\exiftool')) then
+    if RegQueryDWordValue(HKCU, AppRegistryKey, ExifToolPathMarker, Marker) and (Marker <> 0) then
     begin
       if not RegDeleteValue(HKCU, AppRegistryKey, ExifToolPathMarker) then
         Log('Could not remove the ExifTool PATH marker.');
-      RegDeleteKeyIfEmpty(HKCU, AppRegistryKey);
-    end
-    else
-      Log('Could not remove the ExifTool folder from PATH.');
-  end;
+    end;
+    RegDeleteKeyIfEmpty(HKCU, AppRegistryKey);
+  end
+  else
+    Log('Could not remove the ExifTool folder from PATH.');
 end;
