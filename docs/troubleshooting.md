@@ -4,7 +4,7 @@
 
 Open a terminal and run `exiftool -ver`. If it fails, install ExifTool and add it to PATH. You can also put `exiftool.exe` in `<install>\exiftool\`. On 32-bit Windows, use a 32-bit ExifTool build.
 
-Setup does not install ETSU while ExifTool is missing. If you chose manual installation, install ExifTool from [exiftool.org](https://exiftool.org/), then run Setup again. Setup only shows the ExifTool page when ExifTool is not already found. When you choose download, it fetches ExifTool 13.60 from SourceForge, verifies the SHA-256 checksum, extracts it into `<install>\exiftool\`, and adds `<install>\exiftool\` and `<install>\bin\` to your user PATH. It never needs administrator rights.
+Setup does not install ETSU while ExifTool is missing. If you chose manual installation, install ExifTool from [exiftool.org](https://exiftool.org/), then run Setup again. Setup only shows the ExifTool page when ExifTool is not already found. When you choose download, it fetches ExifTool 13.60 from SourceForge, verifies the SHA-256 checksum, extracts it into `<install>\exiftool\`, and adds `<install>\exiftool\` to your user PATH. It never needs administrator rights.
 
 If `exiftoolPATH` is set, ETSU uses only that path. A wrong path does not fall back to PATH. Set `exiftoolPATH=null` to search PATH again, or correct the path in `<install>\bin\config.ini`. The default location is `%LOCALAPPDATA%\Programs\ETSU\bin\config.ini`. After a successful installer download, Setup resets an invalid value to `null` automatically.
 
@@ -64,7 +64,7 @@ The current build is not code-signed. Windows SmartScreen may warn. GitHub relea
 
 ## Uninstall leaves files
 
-The uninstaller removes the Explorer menu, installed files, `bin\config.ini`, `logs`, and `tmp`. It shows an `Uninstall ExifTool` checkbox whenever `exiftool\exiftool.exe` exists, checked by default. If you leave it checked, it removes ExifTool files and the ExifTool PATH entry. Clear it to keep both; the `bin` PATH entry is removed either way.
+The uninstaller removes the Explorer menu, installed files, `bin\config.ini`, `logs`, and `tmp`. It shows an `Uninstall ExifTool` checkbox whenever `exiftool\exiftool.exe` exists, checked by default. If you leave it checked, it removes ExifTool files and the ExifTool PATH entry. Clear it to keep both. The uninstaller also removes a `<install>\bin` PATH entry left by version 0.4.1.
 
 Files you added to the install directory are left in place. Remove them manually if you do not need them. Uninstall also removes `bin\config.ini`; back it up first if you want to keep the configuration.
 

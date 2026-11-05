@@ -100,13 +100,16 @@ Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: str
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date"; ValueType: string; ValueName: "MultiSelectModel"; ValueData: "Player"
 Root: HKCU; Subkey: "Software\Classes\*\shell\etsu\shell\c_date\command"; ValueType: string; ValueName: ""; ValueData: """{app}\bin\{#AppExeName}"" date ""%L"""
 
+[Icons]
+Name: "{userprograms}\ETSU\Uninstall"; Filename: "{app}\bin\uninstall.exe"; Comment: "Uninstall ETSU"
+
 [UninstallDelete]
 Type: files; Name: "{app}\bin\config.ini"
 Type: files; Name: "{app}\Uninstall.lnk"
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\tmp"
-Type: files; Name: "{userprograms}\ETSU\Uninstall.lnk"
-Type: files; Name: "{userprograms}\ETSU\ETSU Documentation.url"
+Type: dirifempty; Name: "{app}\bin"
+Type: dirifempty; Name: "{app}"
 Type: dirifempty; Name: "{userprograms}\ETSU"
 
 [Code]
@@ -568,8 +571,7 @@ end;
 
 procedure FinishExifToolInstall;
 var
-  ExifDir, BinDir, ConfigPath, Configured: string;
-  PathOK: Boolean;
+  ExifDir, ConfigPath, Configured: string;
 begin
   if not ExifToolInstalled then
     Exit;
@@ -596,16 +598,11 @@ begin
       Log('Could not reset invalid exiftoolPATH in config.ini.');
   end;
 
-  BinDir := ExpandConstant('{app}\bin');
-  PathOK := AddPathEntry(ExifDir, ExifToolPathMarker);
-  if not AddPathEntry(BinDir, BinPathMarker) then
-    PathOK := False;
-
-  if not PathOK then
+  if not AddPathEntry(ExifDir, ExifToolPathMarker) then
   begin
-    Log('Could not add the ETSU directories to PATH.');
+    Log('Could not add the ExifTool folder to PATH.');
     MsgBox('ExifTool was installed in:' + #13#10 + ExifDir + #13#10 + #13#10 +
-           'Setup could not add the ETSU directories to PATH. ETSU will still find ExifTool in its install folder.' + #13#10 + #13#10 +
+           'Setup could not add that folder to PATH. ETSU will still find ExifTool in its install folder.' + #13#10 + #13#10 +
            'To use exiftool from a terminal, add that folder to PATH yourself.', mbError, MB_OK);
   end;
 end;
@@ -661,9 +658,25 @@ begin
   end;
 end;
 
+procedure RemoveLegacyBinPath;
+var
+  Marker: Cardinal;
+begin
+  if not RegQueryDWordValue(HKCU, AppRegistryKey, BinPathMarker, Marker) or (Marker = 0) then
+    Exit;
+
+  if RemoveFromUserPath(ExpandConstant('{app}\bin')) then
+  begin
+    if not RegDeleteValue(HKCU, AppRegistryKey, BinPathMarker) then
+      Log('Could not remove the legacy bin PATH marker.');
+  end
+  else
+    Log('Could not remove the legacy bin folder from PATH.');
+end;
+
 procedure CreateUninstallShortcut;
 var
-  LinkPath, TargetPath, StartMenuDir: string;
+  LinkPath, TargetPath: string;
 begin
   LinkPath := ExpandConstant('{app}\Uninstall.lnk');
   TargetPath := ExpandConstant('{app}\bin\uninstall.exe');
@@ -677,15 +690,6 @@ begin
     CreateShellLink(LinkPath, 'Uninstall ETSU', TargetPath, '', ExpandConstant('{app}\bin'), '', 0, 1);
   except
     Log('Could not create Uninstall.lnk: ' + GetExceptionMessage);
-  end;
-
-  StartMenuDir := ExpandConstant('{userprograms}\ETSU');
-  ForceDirectories(StartMenuDir);
-  try
-    CreateShellLink(AddBackslash(StartMenuDir) + 'Uninstall.lnk', 'Uninstall ETSU', TargetPath, '',
-      ExpandConstant('{app}\bin'), '', 0, 1);
-  except
-    Log('Could not create the Start Menu Uninstall shortcut: ' + GetExceptionMessage);
   end;
 end;
 
@@ -719,6 +723,7 @@ begin
   begin
     FinishExifToolInstall;
     RenameUninstaller;
+    RemoveLegacyBinPath;
     CreateUninstallShortcut;
   end;
 end;
