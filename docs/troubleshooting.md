@@ -64,7 +64,7 @@ The current build is not code-signed. Windows SmartScreen may warn. GitHub relea
 
 ## Uninstall leaves files
 
-The uninstaller removes the Explorer menu, installed files, `bin\config.ini`, `logs`, and `tmp`. When Setup installed ExifTool, it also shows an `Uninstall ExifTool` checkbox, checked by default. If you leave it checked, it removes ExifTool files and both PATH entries only when Setup added them. Clear it to keep ExifTool and its PATH entry; the `bin` PATH entry is removed either way.
+The uninstaller removes the Explorer menu, installed files, `bin\config.ini`, `logs`, and `tmp`. It shows an `Uninstall ExifTool` checkbox whenever `exiftool\exiftool.exe` exists, checked by default. If you leave it checked, it removes ExifTool files and the ExifTool PATH entry. Clear it to keep both; the `bin` PATH entry is removed either way.
 
 Files you added to the install directory are left in place. Remove them manually if you do not need them. Uninstall also removes `bin\config.ini`; back it up first if you want to keep the configuration.
 

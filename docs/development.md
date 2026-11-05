@@ -112,7 +112,7 @@ The installed layout is:
 
 The Start Menu folder `%APPDATA%\Microsoft\Windows\Start Menu\Programs\ETSU` contains `Uninstall.lnk` and `ETSU Documentation.url`.
 
-Inno Setup creates `unins000.exe` and `unins000.dat`; Setup renames them to `uninstall.exe` and `uninstall.dat` after installation and updates the Windows uninstall entries.
+The uninstaller is `bin\uninstall.exe`, with its data in `bin\uninstall.dat`; Setup registers both with Windows.
 
 The wizard is forced dark with `WizardStyle=modern dark includetitlebar` and uses `LICENSE` for the license text. After the directory page, a custom page appears only when ExifTool is missing. It says ExifTool was not found and shows two radio choices: download it during Setup (selected by default) or install it manually. Choosing manual disables Next and explains the next step. Before copying files, `PrepareToInstall` checks .NET Framework 4.5 (required), `csc.exe` (optional build tool), and ExifTool, and refuses to install while ExifTool is missing and the download option was not selected. If ExifTool is missing and the user chooses download, `ssInstall` downloads the pinned `exiftool-<version>_<arch>.zip` from SourceForge, verifies its SHA-256, extracts it with native `ExtractArchive`, renames `exiftool(-k).exe` to `exiftool.exe`, and lets `[Files]` copy the package into `exiftool\`. The download and checksum are pinned in `build.ps1`; update both when bumping ExifTool.
 

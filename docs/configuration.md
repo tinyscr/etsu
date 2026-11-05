@@ -46,7 +46,7 @@ If the file or a section is missing, ETSU uses the defaults.
 
 ETSU creates the log and temp directories at startup and checks that the temp directory is writable. The operation workspace is separate from the app temp directory because the replacement step needs the workspace and the original file on the same volume.
 
-The uninstaller removes `<install>\bin\config.ini`, `logs`, and `tmp`. When Setup installed ExifTool, it also asks whether to remove it, checked by default. If you leave it checked, it removes ExifTool files and the PATH entries only when Setup added them. If you clear it, ExifTool and its PATH entry remain. The `bin` PATH entry is removed either way. Back up `config.ini` before uninstalling if you want to keep it.
+The uninstaller removes `<install>\bin\config.ini`, `logs`, and `tmp`. It shows an `Uninstall ExifTool` checkbox whenever `<install>\exiftool\exiftool.exe` exists, checked by default. If you leave it checked, it removes ExifTool files and the `<install>\exiftool` PATH entry. If you clear it, ExifTool and its PATH entry remain. The `bin` PATH entry is removed either way. Back up `config.ini` before uninstalling if you want to keep it.
 
 ## Logs
 
