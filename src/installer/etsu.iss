@@ -73,6 +73,7 @@ SetupIconFile=..\Assets\icon.ico
 Source: "..\..\bin\{#AppExeName}"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "default.ini"; DestDir: "{app}\bin"; DestName: "config.ini"; Flags: onlyifdoesntexist
 Source: "ETSU Documentation.url"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ETSU Documentation.url"; DestDir: "{userprograms}\ETSU"; Flags: ignoreversion
 Source: "{tmp}\{#ExifToolBaseName}\exiftool.exe"; DestDir: "{app}\exiftool"; Flags: external skipifsourcedoesntexist ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
 Source: "{tmp}\{#ExifToolBaseName}\exiftool_files\*"; DestDir: "{app}\exiftool\exiftool_files"; Flags: external skipifsourcedoesntexist recursesubdirs ignoreversion uninsneveruninstall; Check: ShouldInstallExifTool
 
@@ -104,6 +105,9 @@ Type: files; Name: "{app}\bin\config.ini"
 Type: files; Name: "{app}\Uninstall.lnk"
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\tmp"
+Type: files; Name: "{userprograms}\ETSU\Uninstall.lnk"
+Type: files; Name: "{userprograms}\ETSU\ETSU Documentation.url"
+Type: dirifempty; Name: "{userprograms}\ETSU"
 
 [Code]
 const
@@ -659,7 +663,7 @@ end;
 
 procedure CreateUninstallShortcut;
 var
-  LinkPath, TargetPath: string;
+  LinkPath, TargetPath, StartMenuDir: string;
 begin
   LinkPath := ExpandConstant('{app}\Uninstall.lnk');
   TargetPath := ExpandConstant('{app}\bin\uninstall.exe');
@@ -673,6 +677,15 @@ begin
     CreateShellLink(LinkPath, 'Uninstall ETSU', TargetPath, '', ExpandConstant('{app}\bin'), '', 0, 1);
   except
     Log('Could not create Uninstall.lnk: ' + GetExceptionMessage);
+  end;
+
+  StartMenuDir := ExpandConstant('{userprograms}\ETSU');
+  ForceDirectories(StartMenuDir);
+  try
+    CreateShellLink(AddBackslash(StartMenuDir) + 'Uninstall.lnk', 'Uninstall ETSU', TargetPath, '',
+      ExpandConstant('{app}\bin'), '', 0, 1);
+  except
+    Log('Could not create the Start Menu Uninstall shortcut: ' + GetExceptionMessage);
   end;
 end;
 
